@@ -1,0 +1,36 @@
+{
+  "status": "PASS",
+  "flows": [
+    "A: Login → Dashboard",
+    "B: EMPLOYEE → LICENSE_CONTROL → SUPER_ADMIN",
+    "C: ETIC_PDM_ANDROID → THERMOGRAPHER → LEVEL_II",
+    "D: Sistema → Rol → Permiso",
+    "E: Aplicación → Max_Devices=3 → Vigencia",
+    "Consulta y edición de usuarios",
+    "Navegación de módulos"
+  ],
+  "created": [
+    {
+      "username": "lc_e2e_license_control_1790898922395",
+      "id": "098fae85-03c8-45c1-9af5-3877938e9b67",
+      "system": "LICENSE_CONTROL"
+    },
+    {
+      "username": "lc_e2e_etic_pdm_android_1790898922395",
+      "id": "309ea263-6a2e-4bc3-96aa-f1957d141229",
+      "system": "ETIC_PDM_ANDROID"
+    },
+    {
+      "system": "LC_E2E_1790898922395",
+      "id": "4116dd84-97b6-4067-8c49-459025951c34",
+      "role": "38178986-1bf8-482c-bbe3-51cc847a71f2",
+      "permission": "616f115f-0a00-4cc7-9087-91c2608b4714",
+      "applicationAccess": "fdf25c38-753b-475e-8748-e1fa3307f5c2"
+    },
+    {
+      "version": "a3cda379-8f62-4dda-8584-3f2111f87bb0",
+      "name": "Transport fixture 1790898922395",
+      "fixture": "Solo transporte; no es un APK instalable ni firmado"
+    }
+  ]
+}

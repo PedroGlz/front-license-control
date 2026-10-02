@@ -1,0 +1,2 @@
+import { HttpInterceptorFn } from '@angular/common/http';import { inject } from '@angular/core';import { catchError,throwError } from 'rxjs';import { environment } from '../../environments/environment';import { AuthService } from './auth.service';
+export const authInterceptor:HttpInterceptorFn=(req,next)=>{const a=inject(AuthService),token=a.token();return next(token&&req.url.startsWith(environment.apiUrl+'/')?req.clone({setHeaders:{Authorization:`Bearer ${token}`}}):req).pipe(catchError(e=>{if(e.status===401)a.logout();return throwError(()=>e);}));};
