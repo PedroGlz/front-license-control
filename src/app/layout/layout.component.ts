@@ -192,12 +192,12 @@ export class LayoutComponent {
       title: 'Administración',
       items: [
         { label: 'Usuarios', path: '/usuarios', icon: 'users' },
-        { label: 'Tipos de usuario', path: '/tipos-usuario', icon: 'badge' },
         { label: 'Sistemas', path: '/sistemas', icon: 'monitor' },
         { label: 'Roles', path: '/roles', icon: 'admin' },
 //         { label: 'Permisos', path: '/permisos', icon: 'key' },
 //         { label: 'Rol → permisos', path: '/roles-permisos', icon: 'rolePermissions' },
         { label: 'Atributos', path: '/atributos', icon: 'tune' },
+        { label: 'Tipos de usuario', path: '/tipos-usuario', icon: 'badge' },
       ],
     },
     {

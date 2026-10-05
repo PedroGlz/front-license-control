@@ -28,10 +28,7 @@ const CONFIG: Record<string, { title: string; id: string; fields: Field[] }> = {
       { key: 'Name', label: 'Nombre' },
       { key: 'System_Type', label: 'Tipo', options: ['WEB', 'ANDROID', 'DESKTOP', 'API', 'OTHER'] },
       { key: 'Description', label: 'Descripción' },
-      { key: 'Base_Url', label: 'URL base' },
       { key: 'Package_Name', label: 'Package name' },
-      { key: 'Supports_Offline', label: 'Soporta offline', type: 'checkbox' },
-      { key: 'Offline_Validity_Days', label: 'Días offline', type: 'number' },
       { key: 'Status', label: 'Estatus', options: status },
     ],
   },
@@ -100,7 +97,7 @@ const CONFIG: Record<string, { title: string; id: string; fields: Field[] }> = {
       { key: 'Code', label: 'Código' },
       { key: 'Name', label: 'Nombre' },
       { key: 'Package_Name', label: 'Package name' },
-      { key: 'Licensing_Mode', label: 'Modo', options: ['USER_DEVICE', 'DEVICE_ONLY'] },
+      { key: 'Licensing_Mode', label: 'Modalidad', options: ['USER_DEVICE', 'DEVICE_ONLY'] },
       { key: 'Status', label: 'Estatus', options: status },
     ],
   },
@@ -113,7 +110,7 @@ const CONFIG: Record<string, { title: string; id: string; fields: Field[] }> = {
       { key: 'Status', label: 'Estatus', options: ['ACTIVE', 'SUSPENDED', 'REVOKED'] },
       { key: 'Valid_From', label: 'Desde', type: 'date' },
       { key: 'Valid_Until', label: 'Hasta', type: 'date' },
-      { key: 'Max_Devices', label: 'Máximo dispositivos', type: 'number' },
+      { key: 'Max_Devices', label: 'Máximo de dispositivos', type: 'number' },
     ],
   },
   licenses: {
@@ -152,7 +149,7 @@ const CONFIG: Record<string, { title: string; id: string; fields: Field[] }> = {
 const ADMINISTRATIVE = new Set(['user-types', 'systems', 'roles', 'permissions', 'attributes', 'applications']);
 for (const [resource, config] of Object.entries(CONFIG)) {
   if (ADMINISTRATIVE.has(resource)) config.fields = config.fields.filter((field) =>
-    field.key !== 'Status' && !(resource === 'roles' && ['Code', 'Is_System_Admin'].includes(field.key)));
+    (field.key !== 'Status' || resource === 'applications') && !(resource === 'roles' && ['Code', 'Is_System_Admin'].includes(field.key)));
 }
 
 @Component({
@@ -167,7 +164,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
           placeholder="Buscar"
           [(ngModel)]="search"
           (keyup.enter)="page.set(0); load()"
-        />@if (!administrative()) {<select [(ngModel)]="filterStatus" (ngModelChange)="page.set(0); load()">
+        />@if (!administrative() || resource === 'applications') {<select [(ngModel)]="filterStatus" (ngModelChange)="page.set(0); load()">
           <option value="">Todos los estatus</option>
           @for (status of statusOptions(); track status) {
             <option>{{ status }}</option>
@@ -183,9 +180,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
         }
         <button type="button" class="secondary" (click)="search = ''; filterStatus = ''; filterSystem = ''; page.set(0); load()">Limpiar</button></div>
       </div>
-      @if (resource !== 'devices') {
-        <button (click)="open()">Nuevo</button>
-      }
+      <button (click)="open()">{{ resource === 'applications' ? 'Nueva Aplicación' : resource === 'devices' ? 'Nuevo dispositivo' : 'Nuevo' }}</button>
     </div>
     <div class="panel">
       <table>
@@ -231,7 +226,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
     @if (model()) {
       <div class="modal">
         <form #domainForm="ngForm" (ngSubmit)="save()">
-          <div class="dialog-heading"><h2>{{ model()![cfg.id] ? 'Editar' : 'Nuevo' }} {{ cfg.title }}</h2><button type="button" class="icon-button close-button" title="Cerrar" aria-label="Cerrar formulario" (click)="model.set(null)"><app-icon name="close" /></button></div>
+          <div class="dialog-heading"><h2>{{ formTitle() }}</h2><button type="button" class="icon-button close-button" title="Cerrar" aria-label="Cerrar formulario" (click)="model.set(null)"><app-icon name="close" /></button></div>
           <div class="grid">
             @switch (resource) {
               @case ('user-types') {
@@ -294,13 +289,6 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                     name="Description"
                     maxlength="500"
                 /></label>
-                <label
-                  >URL base<input
-                    type="text"
-                    [(ngModel)]="model()!['Base_Url']"
-                    name="Base_Url"
-                    maxlength="500"
-                /></label>
                 @if (model()!['System_Type'] === 'ANDROID') {
                   <label
                     >Package name<input
@@ -310,27 +298,9 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                       maxlength="255"
                   /></label>
                 }
-                <label class="check"
-                  >Soporta offline<input
-                    type="checkbox"
-                    [(ngModel)]="model()!['Supports_Offline']"
-                    name="Supports_Offline"
-                /></label>
-                @if (model()!['Supports_Offline']) {
-                  <label
-                    >Días offline<input
-                      type="number"
-                      [(ngModel)]="model()!['Offline_Validity_Days']"
-                      name="Offline_Validity_Days"
-                      maxlength="150"
-                      min="0"
-                      step="1"
-                  /></label>
-                }
                 
               }
               @case ('roles') {
-                <label>Código<input [ngModel]="code()" name="Code" readonly /></label>
                 <label
                   >Sistema *<select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
                     <option [ngValue]="null">Seleccione</option>
@@ -505,51 +475,20 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                 /></label>
                 
               }
+
               @case ('applications') {
-                <label
-                  >Código<input
-                    type="text"
-                    [ngModel]="code()" readonly
-                    name="Code"
-                    required
-                    maxlength="80"
-                /></label>
-                <label
-                  >Nombre<input
-                    type="text"
-                    [(ngModel)]="model()!['Name']"
-                    name="Name"
-                    required
-                    maxlength="150"
-                /></label>
-                <label
-                  >Package name<input
-                    type="text"
-                    [(ngModel)]="model()!['Package_Name']"
-                    name="Package_Name"
-                    required
-                    maxlength="255"
-                /></label>
-                <label
-                  >Modo<select
-                    [(ngModel)]="model()!['Licensing_Mode']"
-                    name="Licensing_Mode"
-                    required
-                  >
-                    <option value="">Seleccione</option>
-                    <option>USER_DEVICE</option>
-                    <option>DEVICE_ONLY</option>
-                  </select></label
-                >
-                
+                <label>Nombre *<input [(ngModel)]="model()!['Name']" name="Name" required maxlength="150" /></label>
+                <label>Package name *<input [(ngModel)]="model()!['Package_Name']" name="Package_Name" required maxlength="255" /></label>
+                <label>Modalidad *<select [(ngModel)]="model()!['Licensing_Mode']" name="Licensing_Mode" required><option value="">Seleccione</option><option>USER_DEVICE</option><option>DEVICE_ONLY</option></select></label>
+                <label>Estado *<select [(ngModel)]="model()!['Status']" name="Status" required><option value="ACTIVE">Activo</option><option value="INACTIVE">Inactivo</option></select></label>
               }
               @case ('application-access') {
                 <label
-                  >Usuario<select [(ngModel)]="model()!['Id_Usuario']" name="Id_Usuario" required>
+                  >Usuario<select [(ngModel)]="model()!['Id_Usuario']" name="Id_Usuario" [disabled]="!!model()!['Id_Access']" required>
                     <option [ngValue]="null">Seleccione</option>
                     @if (model()!['Id_Usuario'] && !knownUser(model()!['Id_Usuario'])) {
                       <option [value]="model()!['Id_Usuario']">
-                        Usuario legado: {{ model()!['Id_Usuario'] }}
+                        Usuario legado no disponible
                       </option>
                     }
                     @for (o of lookups['users'] || []; track o.id) {
@@ -558,7 +497,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                   </select></label
                 >
                 <label
-                  >Aplicación<select [(ngModel)]="model()!['Id_Application']" name="Id_Application" required>
+                  >Aplicación<select [(ngModel)]="model()!['Id_Application']" name="Id_Application" [disabled]="!!model()!['Id_Access']" required>
                     <option [ngValue]="null">Seleccione</option>
                     @for (o of lookups['applications'] || []; track o.id) {
                       <option [value]="o.id">{{ o.label }}</option>
@@ -566,11 +505,11 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                   </select></label
                 >
                 <label
-                  >Estatus<select [(ngModel)]="model()!['Status']" name="Status" required>
+                  >Estado<select [(ngModel)]="model()!['Status']" name="Status" required>
                     <option value="">Seleccione</option>
-                    <option>ACTIVE</option>
-                    <option>SUSPENDED</option>
-                    <option>REVOKED</option>
+                    <option value="ACTIVE">Activo</option>
+                    <option value="SUSPENDED">Suspendido</option>
+                    <option value="REVOKED">Revocado</option>
                   </select></label
                 >
                 <label
@@ -590,7 +529,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                     maxlength="150"
                 /></label>
                 <label
-                  >Máximo dispositivos<input
+                  >Máximo de dispositivos *<input
                     type="number"
                     [(ngModel)]="model()!['Max_Devices']"
                     name="Max_Devices"
@@ -600,116 +539,52 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                     step="1"
                 /></label>
               }
+
               @case ('licenses') {
-                <label
-                  >Usuario<select [(ngModel)]="model()!['Id_Usuario']" name="Id_Usuario">
+                <label>Aplicación *<select [(ngModel)]="model()!['Id_Application']" name="Id_Application" required>
+                  <option [ngValue]="null">Seleccione</option>
+                  @for (o of lookups['applications'] || []; track o.id) { <option [value]="o.id">{{ o.label }}</option> }
+                </select></label>
+                <label>Dispositivo *<select [(ngModel)]="model()!['Id_Device']" name="Id_Device" required>
+                  <option [ngValue]="null">Seleccione</option>
+                  @for (o of lookups['devices'] || []; track o.id) { <option [value]="o.id">{{ o.label }}</option> }
+                </select></label>
+                @if (selectedDevice() && !['ACTIVE','ENROLLED'].includes(selectedDevice()!.Status || '')) {
+                  <p class="error">Este dispositivo todavía no ha sido enrolado. La licencia no podrá utilizarse hasta completar el enrolamiento.</p>
+                }
+                @if (selectedApplication()?.Licensing_Mode === 'USER_DEVICE') {
+                  <label>Usuario *<select [(ngModel)]="model()!['Id_Usuario']" name="Id_Usuario" required>
                     <option [ngValue]="null">Seleccione</option>
-                    @for (o of lookups['users'] || []; track o.id) {
-                      <option [value]="o.id">{{ o.label }}</option>
-                    }
-                  </select></label
-                >
-                <label
-                  >Aplicación<select [(ngModel)]="model()!['Id_Application']" name="Id_Application" required>
-                    <option [ngValue]="null">Seleccione</option>
-                    @for (o of lookups['applications'] || []; track o.id) {
-                      <option [value]="o.id">{{ o.label }}</option>
-                    }
-                  </select></label
-                >
-                <label
-                  >Dispositivo<select [(ngModel)]="model()!['Id_Device']" name="Id_Device" required>
-                    <option [ngValue]="null">Seleccione</option>
-                    @for (o of lookups['devices'] || []; track o.id) {
-                      <option [value]="o.id">{{ o.label }}</option>
-                    }
-                  </select></label
-                >
-                <label
-                  >Desde<input
-                    type="date"
-                    [(ngModel)]="model()!['Valid_From']"
-                    name="Valid_From"
-                    required
-                    maxlength="150"
-                /></label>
-                <label
-                  >Hasta<input
-                    type="date"
-                    [(ngModel)]="model()!['Valid_Until']"
-                    name="Valid_Until"
-                    required
-                    maxlength="150"
-                /></label>
-                <label
-                  >Estatus<select [(ngModel)]="model()!['Status']" name="Status" required>
-                    <option value="">Seleccione</option>
-                    <option>ACTIVE</option>
-                    <option>SUSPENDED</option>
-                    <option>REVOKED</option>
-                    <option>EXPIRED</option>
-                  </select></label
-                >
+                    @if (model()!['Id_Usuario'] && !knownUser(model()!['Id_Usuario'])) { <option [value]="model()!['Id_Usuario']">Usuario legado no disponible</option> }
+                    @for (o of lookups['users'] || []; track o.id) { <option [value]="o.id">{{ o.label }}</option> }
+                  </select></label>
+                }
+                <label>Inicio *<input type="date" [(ngModel)]="model()!['Valid_From']" name="Valid_From" required /></label>
+                <label>Vencimiento *<input type="date" [(ngModel)]="model()!['Valid_Until']" name="Valid_Until" [min]="model()!['Valid_From'] || null" required /></label>
+                <label>Estado<select [(ngModel)]="model()!['Status']" name="Status" required><option value="ACTIVE">Activa</option><option value="SUSPENDED">Suspendida</option><option value="REVOKED">Revocada</option><option value="EXPIRED">Vencida</option></select></label>
               }
+
               @case ('devices') {
-                <label>Usuarios<input [value]="model()!['Assigned_Users'] || '—'" disabled /></label
-                ><label
-                  >Aplicaciones<input
-                    [value]="model()!['Assigned_Applications'] || '—'"
-                    disabled /></label
-                ><label
-                  >Fingerprint<input
-                    [value]="model()!['Public_Key_Fingerprint'] || '—'"
-                    disabled /></label
-                ><label>Registro<input [value]="model()!['Registered_At'] || '—'" disabled /></label
-                ><label
-                  >Enrolamiento<input [value]="model()!['Enrolled_At'] || '—'" disabled /></label
-                ><label
-                  >Última validación<input [value]="model()!['Last_Validation_At'] || '—'" disabled
-                /></label>
-                <label
-                  >Identificador<input
-                    [(ngModel)]="model()!['Device_UUID']"
-                    name="Device_UUID"
-                    disabled
-                /></label>
-                <label
-                  >Nombre<input [(ngModel)]="model()!['Display_Name']" name="Display_Name" disabled
-                /></label>
-                <label
-                  >Fabricante<input
-                    [(ngModel)]="model()!['Manufacturer']"
-                    name="Manufacturer"
-                    disabled
-                /></label>
-                <label>Modelo<input [(ngModel)]="model()!['Model']" name="Model" disabled /></label>
-                <label
-                  >Android<input
-                    [(ngModel)]="model()!['Android_Version']"
-                    name="Android_Version"
-                    disabled
-                /></label>
-                <label
-                  >Package<input
-                    [(ngModel)]="model()!['Package_Name']"
-                    name="Package_Name"
-                    disabled
-                /></label>
-                <label
-                  >Versión<input [(ngModel)]="model()!['App_Version']" name="App_Version" disabled
-                /></label>
-                <label
-                  >Estatus<select [(ngModel)]="model()!['Status']" name="Status" required>
-                    <option value="">Seleccione</option>
-                    <option>PENDING</option>
-                    <option>ENROLLED</option>
-                    <option>ACTIVE</option>
-                    <option>SUSPENDED</option>
-                    <option>REVOKED</option>
-                    <option>INACTIVE</option>
-                  </select></label
-                >
-                <label>Notas<input [(ngModel)]="model()!['Notes']" name="Notes" disabled /></label>
+                <label>Nombre *<input [(ngModel)]="model()!['Display_Name']" name="Display_Name" required maxlength="150" /></label>
+                <label>Fabricante<input [(ngModel)]="model()!['Manufacturer']" name="Manufacturer" maxlength="100" /></label>
+                <label>Modelo<input [(ngModel)]="model()!['Model']" name="Model" maxlength="100" /></label>
+                <label>Versión Android<input [(ngModel)]="model()!['Android_Version']" name="Android_Version" maxlength="50" /></label>
+                @if (!model()!['Id_Device']) {
+                  <label>Estado inicial<select [(ngModel)]="model()!['Status']" name="Status" required><option value="PENDING">Pendiente de enrolamiento</option><option value="SUSPENDED">Suspendido</option></select></label>
+                }
+                <label>Notas<textarea [(ngModel)]="model()!['Notes']" name="Notes" maxlength="2000" rows="3"></textarea></label>
+                @if (model()!['Id_Device']) {
+                  <label>Estado<input [value]="statusLabel(model()!['Status'])" readonly /></label>
+                  <label>Origen<input [value]="model()!['Origin']" readonly /></label>
+                  <label>Fingerprint<input [value]="model()!['Public_Key_Fingerprint'] || 'Sin vincular'" readonly /></label>
+                  <label>Identificador<input [value]="model()!['Device_UUID'] || '—'" readonly /></label>
+                  <label>Android ID<input [value]="model()!['Android_ID'] || '—'" readonly /></label>
+                  <label>Keystore<input [value]="model()!['Key_Security_Level'] || 'UNKNOWN'" readonly /></label>
+                  <label>Attestation<input [value]="model()!['Attestation_Verified'] ? 'Verificada' : model()!['Attestation_Available'] ? 'Disponible, no verificada' : 'No disponible'" readonly /></label>
+                  <label>Registro<input [value]="model()!['Registered_At'] || '—'" readonly /></label>
+                  <label>Enrolamiento<input [value]="model()!['Enrolled_At'] || 'Pendiente'" readonly /></label>
+                  <label>Última validación<input [value]="model()!['Last_Validation_At'] || 'Sin validar'" readonly /></label>
+                }
               }
             }
           </div>
@@ -748,7 +623,7 @@ export class DomainAdminComponent {
   error = signal('');
   search = '';
   order = '';
-  lookups: Record<string, { id: string; label: string }[]> = {};
+  lookups: Record<string, { id: string; label: string; Licensing_Mode?: string; Status?: string }[]> = {};
   constructor() {
     this.route.data.subscribe((d) => {
       this.resource = d['domain'];
@@ -762,6 +637,14 @@ export class DomainAdminComponent {
       this.load();
     });
   }
+  formTitle() {
+    if (this.resource === 'applications') return this.model()?.['Id_Application'] ? 'Editar Aplicación' : 'Nueva Aplicación';
+    const titles: Record<string,string[]> = {'licenses':['Nueva licencia','Editar licencia'],'devices':['Nuevo dispositivo','Editar dispositivo'],'application-access':['Autorizar usuario','Editar acceso']};
+    return titles[this.resource] ? titles[this.resource][this.model()?.[this.cfg.id] ? 1 : 0] : (this.model()?.[this.cfg.id] ? 'Editar ' : 'Nuevo ') + this.cfg.title;
+  }
+  selectedApplication() { return this.lookups['applications']?.find(a => a.id === this.model()?.['Id_Application']); }
+  selectedDevice() { return this.lookups['devices']?.find(d => d.id === this.model()?.['Id_Device']); }
+  statusLabel(value: string) { return ({ACTIVE:'Activo',INACTIVE:'Inactivo',PENDING:'Pendiente',ENROLLED:'Enrolado',SUSPENDED:'Suspendido',REVOKED:'Revocado',EXPIRED:'Vencido'} as Record<string,string>)[value] || value; }
   knownUser(id: string) {
     return this.lookups['users']?.some((user) => user.id === id);
   }
@@ -799,7 +682,7 @@ export class DomainAdminComponent {
         f.key === 'Package_Name' &&
         this.resource === 'systems' &&
         this.model()?.['System_Type'] !== 'ANDROID'
-      ) && !(f.key === 'Offline_Validity_Days' && !this.model()?.['Supports_Offline'])
+      )
     );
   }
   tableFields() {
@@ -812,7 +695,7 @@ export class DomainAdminComponent {
         { key: 'Last_Validation_At', label: 'Última validación' },
         { key: 'Status', label: 'Estatus' },
       ];
-    const fields = this.cfg.fields.filter((f) => f.key !== 'Status').slice(0, 5);
+    const fields = this.cfg.fields.filter((f) => f.key !== 'Status' && !(this.resource === 'applications' && f.key === 'Code')).slice(0, 5);
     return [...fields, ...this.cfg.fields.filter((f) => f.key === 'Status')];
   }
   required(f: Field) {
@@ -845,10 +728,11 @@ export class DomainAdminComponent {
       r
         ? { ...r }
         : {
-            Status: 'ACTIVE',
+            Status: this.resource === 'devices' ? 'PENDING' : 'ACTIVE',
+            Valid_From: ['licenses','application-access'].includes(this.resource) ? new Date().toISOString().slice(0,10) : undefined,
+            Licensing_Mode: 'USER_DEVICE',
             Max_Devices: 1,
             Sort_Order: 0,
-            Supports_Offline: false,
             Is_Required: false,
             Is_Multivalue: false,
             Is_System_Admin: false,
@@ -867,7 +751,13 @@ export class DomainAdminComponent {
     const m = { ...this.model() };
     if (this.administrative()) m['Code'] = this.code();
     delete m['Is_Active'];
-    if (this.administrative()) delete m['Status'];
+    if (this.resource === 'licenses') {
+      const app = this.selectedApplication();
+      if (!app) { void this.alerts.warning('Validación', 'Seleccione una aplicación disponible'); return; }
+      if (app.Licensing_Mode === 'DEVICE_ONLY') m['Id_Usuario'] = null;
+      else if (!m['Id_Usuario']) { void this.alerts.warning('Validación', 'Seleccione un usuario para USER_DEVICE'); return; }
+    }
+    if (this.administrative() && this.resource !== 'applications') delete m['Status'];
     if (this.resource === 'roles') { delete m['Code']; delete m['Is_System_Admin']; }
     if (m['Valid_From'] && m['Valid_Until'] && m['Valid_From'] > m['Valid_Until']) {
       void this.alerts.warning('Validación', 'Hasta debe ser posterior a Desde');
@@ -886,7 +776,6 @@ export class DomainAdminComponent {
       );
       if (!result.isConfirmed) return;
     }
-    if (m['Supports_Offline'] === false) m['Offline_Validity_Days'] = null;
     const id = m[this.cfg.id],
       q = id ? this.api.update(this.resource, id, m) : this.api.create(this.resource, m);
     q.subscribe({

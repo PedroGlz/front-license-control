@@ -47,7 +47,7 @@ export class UsersComponent {
     { key: 'Password', label: 'Contraseña', type: 'password', max: 72, required: true },
   ];
   visibleFields() { return this.fields.filter((f) => f.key !== 'Password'); }
-  labelName(label: string) { return label.replace(/^.*? - /, ''); }
+  labelName(label: string) { return label; }
   fullName() { const m = this.model(); return [m?.['First_Name'],m?.['Last_Name'],m?.['Second_Last_Name']].filter(Boolean).join(' '); }
   isActive() { const m = this.model(); return m?.['Is_Active'] !== false && m?.['Is_Active'] !== 0 && (!m?.['Status'] || m['Status'] === 'ACTIVE'); }
   initialMatches() { return !!this.model()?.['Password'] && this.model()!['Password'] === this.initialConfirmation; }

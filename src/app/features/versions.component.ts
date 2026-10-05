@@ -19,8 +19,7 @@ import { AlertService } from '../core/alert.service';
         [(ngModel)]="search"
         (keyup.enter)="page = 0; load()"
       /><button type="button" class="secondary" (click)="search = ''; application = ''; page = 0; rows.set([])">Limpiar</button></div><button
-        [disabled]="!application"
-        (click)="edit.set({ Version_Name: '', Minimum_Android: '', Release_Notes: '' })"
+        (click)="open()"
       >
         Subir APK
       </button>
@@ -47,8 +46,8 @@ import { AlertService } from '../core/alert.service';
               <td>{{ v['Sha256'] }}</td>
               <td>{{ v['Created_At'] }}</td>
               <td>
-                <span class="badge" [class.inactive]="!v['Is_Published']">{{
-                  v['Is_Published'] ? 'PUBLICADA' : 'NO PUBLICADA'
+                <span class="badge" [class.inactive]="!v['Published']">{{
+                  v['Published'] ? 'PUBLICADA' : 'NO PUBLICADA'
                 }}</span>
               </td>
               <td><button type="button" class="icon-button" title="Ver / Editar" aria-label="Ver / Editar" (click)="open(v)"><app-icon name="edit" /></button><button type="button" class="icon-button danger" title="Desactivar" aria-label="Desactivar" (click)="remove(v)"><app-icon name="trash" /></button></td>
@@ -67,30 +66,15 @@ import { AlertService } from '../core/alert.service';
     @if (edit()) {
       <div class="modal">
         <form #f="ngForm" (ngSubmit)="save()">
-          <div class="dialog-heading"><h2>{{ edit()!['Id_Version'] ? 'Editar versión' : 'Cargar APK' }}</h2><button type="button" class="icon-button close-button" title="Cerrar" aria-label="Cerrar formulario" (click)="edit.set(null)"><app-icon name="close" /></button></div>
+          <div class="dialog-heading"><h2>{{ edit()!['Id_Version'] ? 'Editar versión' : 'Subir versión APK' }}</h2><button type="button" class="icon-button close-button" title="Cerrar" aria-label="Cerrar formulario" (click)="edit.set(null)"><app-icon name="close" /></button></div>
           <div class="grid">
-            <label
-              >Nombre de versión<input
-                [(ngModel)]="edit()!['Version_Name']"
-                name="name"
-                required
-                maxlength="80" /></label
-            ><label
-              >Android mínimo<input
-                [(ngModel)]="edit()!['Minimum_Android']"
-                name="android"
-                maxlength="40" /></label
-            ><label
-              >Notas de versión<textarea
-                [(ngModel)]="edit()!['Release_Notes']"
-                name="notes"
-              ></textarea>
-            </label>
-            @if (!edit()!['Id_Version']) {
-              <label
-                >Archivo APK<input type="file" accept=".apk" (change)="choose($event)" required
-              /></label>
-            }
+            <label>Aplicación *<select [(ngModel)]="edit()!['Id_Application']" name="applicationId" [disabled]="!!edit()!['Id_Version']" required><option value="">Seleccione</option>@for (app of applications(); track app.id) { <option [value]="app.id">{{ app.label }}</option> }</select></label>
+            <label>Versión *<input [(ngModel)]="edit()!['Version_Name']" name="versionName" required maxlength="80" /></label>
+            @if (!edit()!['Id_Version']) { <label>Archivo APK *<input type="file" accept=".apk" (change)="choose($event)" required /></label> }
+            <label>Android mínimo<input [(ngModel)]="edit()!['Minimum_Android']" name="minimumAndroid" maxlength="40" /></label>
+            <label>Notas de versión<textarea [(ngModel)]="edit()!['Release_Notes']" name="releaseNotes" rows="3"></textarea></label>
+            <label class="check"><input type="checkbox" [(ngModel)]="edit()!['Mandatory']" name="mandatory" />Actualización obligatoria</label>
+            <label class="check"><input type="checkbox" [(ngModel)]="edit()!['Published']" name="published" />{{ edit()!['Id_Version'] ? 'Publicada' : 'Publicar al subir' }}</label>
           </div>
           <p>{{ message() }}</p>
           <div class="actions">
@@ -141,20 +125,25 @@ export class VersionsComponent {
       error: (e) => void this.alerts.error('No fue posible eliminar', this.alerts.message(e)),
     });
   }
-  open(v: any) {
-    this.edit.set({ ...v });
+  open(v?: any) {
+    this.file = null; this.message.set('');
+    this.edit.set(v ? {...v} : {Id_Application:this.application, Version_Name:'', Minimum_Android:'', Release_Notes:'', Mandatory:false, Published:false});
   }
   choose(e: Event) {
     this.file = (e.target as HTMLInputElement).files?.[0] || null;
   }
   save() {
     const v = this.edit();
+    const application = v.Id_Application || this.application;
+    if (!application) { void this.alerts.warning('Validación', 'Seleccione una aplicación'); return; }
     let request;
     if (v.Id_Version)
-      request = this.api.put(`/admin/applications/${this.application}/versions/${v.Id_Version}`, {
+      request = this.api.put(`/admin/applications/${application}/versions/${v.Id_Version}`, {
         Version_Name: v.Version_Name,
         Minimum_Android: v.Minimum_Android,
         Release_Notes: v.Release_Notes,
+        Mandatory: v.Mandatory,
+        Published: v.Published,
       });
     else {
       if (!this.file) {
@@ -164,9 +153,11 @@ export class VersionsComponent {
       const body = new FormData();
       body.append('file', this.file);
       body.append('versionName', v.Version_Name);
+      body.append('mandatory', String(!!v.Mandatory));
+      body.append('published', String(!!v.Published));
       if (v.Minimum_Android) body.append('minimumAndroid', v.Minimum_Android);
       if (v.Release_Notes) body.append('releaseNotes', v.Release_Notes);
-      request = this.api.post(`/admin/applications/${this.application}/versions`, body);
+      request = this.api.post(`/admin/applications/${application}/versions`, body);
     }
     this.busy.set(true);
     request.subscribe({
@@ -174,6 +165,7 @@ export class VersionsComponent {
         this.edit.set(null);
         this.busy.set(false);
         this.file = null;
+        this.application = application;
         this.load();
         void this.alerts.success(v.Id_Version ? 'Versión actualizada' : 'APK cargado');
       },

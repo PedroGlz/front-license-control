@@ -20,7 +20,7 @@ export class UserSystemsComponent implements OnInit {
   rolesLoading = signal(false);
   attributesLoading = signal(false);
   assignmentBusy = signal(false);
-  name(label: string) { return label.replace(/^.*? - /, ''); }
+  name(label: string) { return label; }
   accessFor(id: string) { return this.assigned().find(a => a['Id_System'] === id); }
   systemName() { return this.accessFor(this.selectedSystem())?.['System_Name'] || 'este sistema'; }
   visibleSystems() {

@@ -268,10 +268,7 @@ export class CatalogComponent {
         Name: '',
         System_Type: 'WEB',
         Description: '',
-        Base_Url: '',
         Package_Name: '',
-        Supports_Offline: false,
-        Offline_Validity_Days: null,
         Status: 'ACTIVE',
       },
     };
