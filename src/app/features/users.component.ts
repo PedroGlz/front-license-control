@@ -118,7 +118,7 @@ export class UsersComponent {
         void this.alerts.success(m['Id_User'] ? 'Usuario actualizado' : 'Usuario creado');
       },
       error: (e) => {
-        let message = !m['Id_User'] && e.status >= 500 ? 'Ocurrió un error al crear el usuario.' : this.alerts.message(e);
+        let message = this.alerts.message(e);
         if (e.status === 409 && ['El nombre de usuario ya existe','El correo electrónico ya está registrado'].includes(message)) message += '.';
         void this.alerts.error('No fue posible guardar el usuario', message);
       },

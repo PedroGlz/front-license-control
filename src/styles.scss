@@ -133,3 +133,14 @@ button:disabled {
 .swal2-container {
   z-index: 20000 !important;
 }
+.swal2-loader {
+  border-color: var(--primary) transparent var(--primary) transparent !important;
+}
+.swal2-confirm {
+  background: var(--primary) !important;
+  color: var(--surface) !important;
+}
+.swal2-cancel {
+  background: var(--muted-bg) !important;
+  color: var(--text) !important;
+}

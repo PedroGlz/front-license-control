@@ -36,6 +36,6 @@
       <label>Hasta<input type="date" [(ngModel)]="edit.row['Valid_Until']" name="Valid_Until" [required]="edit.resource === 'licenses'" [min]="edit.row['Valid_From']" /></label>
       <label>Estado<select [(ngModel)]="edit.row['Status']" name="Status" required><option value="ACTIVE">Activa</option><option value="SUSPENDED">Suspendida</option><option value="REVOKED">Revocada</option>@if (edit.resource === 'licenses') { <option value="EXPIRED">Vencida</option> }</select></label>
       @if (edit.resource === 'application-access') { <label>Dispositivos permitidos<input type="number" [(ngModel)]="edit.row['Max_Devices']" name="Max_Devices" required min="1" step="1" /></label> }
-    </div><div class="user-actions"><button type="button" class="secondary" [disabled]="saving()" (click)="editor.set(null)">Cancelar</button><button [disabled]="licenseForm.invalid || saving()">{{ saving() ? 'Guardando…' : 'Guardar cambios' }}</button></div></form>
+    </div><div class="user-actions"><button type="button" class="secondary" [disabled]="saving()" (click)="editor.set(null)">Cancelar</button><button [disabled]="licenseForm.invalid || saving()">Guardar cambios</button></div></form>
   </section>
 }

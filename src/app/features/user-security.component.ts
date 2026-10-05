@@ -19,7 +19,7 @@ import { AlertService } from '../core/alert.service';
         <li [class.met]="matches()">{{ matches() ? '✓' : '○' }} Ambas contraseñas coinciden</li>
       </ul>
       @if (confirmation && !matches()) { <p class="form-error">Las contraseñas no coinciden.</p> }
-      <div class="user-actions"><button type="button" class="secondary" [disabled]="busy" (click)="reset()">Cancelar</button><button [disabled]="securityForm.invalid || !matches() || busy">{{ busy ? 'Actualizando…' : 'Actualizar contraseña' }}</button></div>
+      <div class="user-actions"><button type="button" class="secondary" [disabled]="busy" (click)="reset()">Cancelar</button><button [disabled]="securityForm.invalid || !matches() || busy">Actualizar contraseña</button></div>
     </form>
   </section>`,
 })

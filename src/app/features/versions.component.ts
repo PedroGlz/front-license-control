@@ -80,7 +80,7 @@ import { AlertService } from '../core/alert.service';
           <div class="actions">
             <button type="button" class="secondary" (click)="edit.set(null)">Cancelar</button
             ><button [disabled]="f.invalid || busy()">
-              {{ busy() ? 'Guardando…' : 'Guardar' }}
+              Guardar
             </button>
           </div>
         </form>
@@ -133,7 +133,9 @@ export class VersionsComponent {
     this.file = (e.target as HTMLInputElement).files?.[0] || null;
   }
   save() {
+    if (this.busy()) return;
     const v = this.edit();
+    if (!v?.Version_Name?.trim()) { void this.alerts.warning('Validación', 'Debes indicar la versión.'); return; }
     const application = v.Id_Application || this.application;
     if (!application) { void this.alerts.warning('Validación', 'Seleccione una aplicación'); return; }
     let request;
@@ -167,7 +169,7 @@ export class VersionsComponent {
         this.file = null;
         this.application = application;
         this.load();
-        void this.alerts.success(v.Id_Version ? 'Versión actualizada' : 'APK cargado');
+        void this.alerts.success(v.Id_Version ? 'Versión actualizada' : 'APK cargado correctamente');
       },
       error: (e) => {
         this.busy.set(false);

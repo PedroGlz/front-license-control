@@ -27,7 +27,7 @@ import { ThemeService } from '../core/theme.service';
           formControlName="password"
           autocomplete="current-password" /></label
       ><button [disabled]="form.invalid || loading()">
-        {{ loading() ? 'Ingresando…' : 'Iniciar sesión' }}
+        Iniciar sesión
       </button>
     </form>
   </main>`,
@@ -113,7 +113,7 @@ export class LoginComponent {
     password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
   submit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid || this.loading()) return;
     this.loading.set(true);
     const v = this.form.getRawValue();
     this.a.login(v.username, v.password).subscribe({
