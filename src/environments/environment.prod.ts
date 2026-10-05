@@ -1,1 +1,1 @@
-export const environment = { production: true, apiUrl: 'https://license-control.etic-system.online/api' };
+export const environment = { production: true, apiUrl: 'https://license-control-api.etic-system.online/api' };

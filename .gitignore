@@ -8,6 +8,16 @@
 
 # Node
 /node_modules
+.env
+.env.*
+!.env.example
+storage/
+*.apk
+*.log
+logs/
+secrets/
+*.pem
+*.key
 npm-debug.log
 yarn-error.log
 
