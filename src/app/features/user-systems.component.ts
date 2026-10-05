@@ -1,4 +1,4 @@
-import { Component, input, inject, signal, OnInit } from '@angular/core';
+import { Component, input, inject, signal, output, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../core/api.service';
@@ -8,93 +8,26 @@ import { AlertService } from '../core/alert.service';
   standalone: true,
   selector: 'app-user-systems',
   imports: [FormsModule],
-  styleUrls: ['./forms.scss'],
-  template: `
-    <h3>Sistemas y atributos</h3>
-    <div class="toolbar">
-      <select [(ngModel)]="newSystem">
-        <option value="">Seleccione sistema</option>
-        @for (s of systems(); track s.id) {
-          <option [value]="s.id">{{ s.label }}</option>
-        }</select
-      ><button type="button" [disabled]="!newSystem" (click)="assign()">Asignar sistema</button>
-    </div>
-    @if (message()) {
-      <p role="status">{{ message() }}</p>
-    }
-    @for (access of assigned(); track access['Id_System']) {
-      <section class="panel" style="padding:16px;margin-bottom:14px">
-        <h4>{{ access['System_Code'] }} — {{ access['System_Name'] }}</h4>
-        <div class="actions">
-          <button type="button" (click)="removeSystem(access)">Quitar</button
-          ><button type="button" class="secondary" (click)="select(access['Id_System'])">
-            Roles y atributos
-          </button>
-        </div>
-        @if (selectedSystem() === access['Id_System']) {
-          <h4>Roles del sistema</h4>
-          @for (role of roles(); track role['Id_Role']) {
-            <label style="display:block;margin:8px"
-              ><input
-                type="checkbox"
-                [(ngModel)]="role['Assigned']"
-              />
-              {{ role['Name'] }}</label
-            >
-          }
-          <button type="button" (click)="saveRoles()">Guardar roles</button>
-          <h4>Atributos del sistema</h4>
-          <div class="grid">
-            @for (a of attributes(); track a['Id_Attribute']) {
-              <label
-                >{{ a['Name'] }}{{ a['Is_Required'] ? ' *' : '' }}
-                @if (
-                  a['Data_Type'] === 'MULTISELECT' ||
-                  (a['Is_Multivalue'] && a['Data_Type'] === 'SELECT')
-                ) {
-                  <select multiple [(ngModel)]="a['_value']">
-                    @for (o of a['_options']; track o['Value_Code']) {
-                      <option [value]="o['Value_Code']">{{ o['Display_Name'] }}</option>
-                    }
-                  </select>
-                } @else if (a['Data_Type'] === 'SELECT') {
-                  <select [(ngModel)]="a['_value']" [required]="a['Is_Required']">
-                    <option [ngValue]="null">Sin valor</option>
-                    @for (o of a['_options']; track o['Value_Code']) {
-                      <option [value]="o['Value_Code']">{{ o['Display_Name'] }}</option>
-                    }
-                  </select>
-                } @else if (a['Data_Type'] === 'BOOLEAN' && !a['Is_Multivalue']) {
-                  <select [(ngModel)]="a['_value']">
-                    <option [ngValue]="null">Sin valor</option>
-                    <option [ngValue]="true">Sí</option>
-                    <option [ngValue]="false">No</option>
-                  </select>
-                } @else if (a['Data_Type'] === 'JSON' || a['Is_Multivalue']) {
-                  <textarea [(ngModel)]="a['_value']" placeholder="JSON" rows="3"></textarea>
-                } @else {
-                  <input
-                    [type]="inputType(a['Data_Type'])"
-                    [(ngModel)]="a['_value']"
-                    [required]="a['Is_Required']"
-                    [min]="a['Min_Value']"
-                    [max]="a['Max_Value']"
-                    [step]="a['Data_Type'] === 'DECIMAL' ? 'any' : '1'"
-                  />
-                }
-              </label>
-            }
-          </div>
-          <div class="actions">
-            <button type="button" (click)="saveAttributes()">Guardar atributos</button>
-          </div>
-        }
-      </section>
-    }
-  `,
+  styleUrls: ['./user-detail.scss'],
+  templateUrl: './user-systems.component.html',
 })
 export class UserSystemsComponent implements OnInit {
   userId = input.required<string>();
+  section = input('systems');
+  sectionChange = output<string>();
+  systemSearch = '';
+  loading = signal(true);
+  rolesLoading = signal(false);
+  attributesLoading = signal(false);
+  assignmentBusy = signal(false);
+  name(label: string) { return label.replace(/^.*? - /, ''); }
+  accessFor(id: string) { return this.assigned().find(a => a['Id_System'] === id); }
+  systemName() { return this.accessFor(this.selectedSystem())?.['System_Name'] || 'este sistema'; }
+  visibleSystems() {
+    const items = [...this.systems()];
+    for (const access of this.assigned()) if (!items.some(s => s.id === access['Id_System'])) items.push({id:access['Id_System'],label:access['System_Name']});
+    return items.filter(s => this.name(s.label).toLocaleLowerCase().includes(this.systemSearch.toLocaleLowerCase()));
+  }
   private api = inject(ApiService);
   private alerts = inject(AlertService);
   systems = signal<any[]>([]);
@@ -105,42 +38,54 @@ export class UserSystemsComponent implements OnInit {
   message = signal('');
   newSystem = '';
   ngOnInit() {
-    this.api.get<any[]>('/admin/lookups/systems').subscribe((x) => this.systems.set(x));
+    this.api.get<any[]>('/admin/lookups/systems').subscribe({next: (x) => this.systems.set(x), error: (e) => this.fail(e)});
     this.load();
   }
   load() {
-    this.api.get<any[]>(`/admin/users/${this.userId()}/systems`).subscribe((x) => {
-      this.assigned.set(x);
-    });
+    this.api.get<any[]>(`/admin/users/${this.userId()}/systems`).subscribe({next: (x) => { this.assigned.set(x); this.loading.set(false); }, error: (e) => { this.loading.set(false); this.fail(e); }});
   }
-  assign() {
+  async assign() {
+    if (this.assignmentBusy()) return;
+    const system = this.newSystem;
+    this.assignmentBusy.set(true);
+    if (!(await this.alerts.confirm('¿Asignar sistema?', 'El usuario tendrá acceso al sistema seleccionado.')).isConfirmed) { this.assignmentBusy.set(false); return; }
     this.api
       .post(`/admin/users/${this.userId()}/systems`, {
-        Id_System: this.newSystem,
+        Id_System: system,
       })
       .subscribe({
         next: () => {
           this.newSystem = '';
+          this.assignmentBusy.set(false);
           this.load();
           void this.alerts.success('Sistema asignado');
         },
-        error: (e) => this.fail(e),
+        error: (e) => { this.assignmentBusy.set(false); this.fail(e); },
       });
   }
   async removeSystem(a: any) {
-    if (!(await this.alerts.confirm('¿Quitar sistema?', 'La asignación será desactivada.')).isConfirmed) return;
+    if (this.assignmentBusy()) return;
+    this.assignmentBusy.set(true);
+    if (!(await this.alerts.confirm('¿Quitar sistema?', 'La asignación será desactivada.')).isConfirmed) { this.assignmentBusy.set(false); return; }
     this.api.delete(`/admin/users/${this.userId()}/systems/${a.Id_System}`).subscribe({
-      next: () => { this.selectedSystem.set(''); this.load(); void this.alerts.success('Sistema quitado'); },
-      error: (e) => this.fail(e),
+      next: () => { this.assignmentBusy.set(false); this.selectedSystem.set(''); this.load(); void this.alerts.success('Sistema quitado'); },
+      error: (e) => { this.assignmentBusy.set(false); this.fail(e); },
     });
   }
   select(s: string) {
     this.selectedSystem.set(s);
-    this.api.get<any[]>(`/admin/users/${this.userId()}/systems/${s}/roles`).subscribe((x) => {
+    this.roles.set([]); this.attributes.set([]);
+    this.rolesLoading.set(!!s); this.attributesLoading.set(!!s);
+    if (!s) return;
+    this.api.get<any[]>(`/admin/users/${this.userId()}/systems/${s}/roles`).subscribe({next: (x) => {
+      if (this.selectedSystem() !== s) return;
+      this.rolesLoading.set(false);
       x.forEach((r) => (r.Assigned = !!r.Assigned));
       this.roles.set(x);
-    });
-    this.api.get<any[]>(`/admin/users/${this.userId()}/systems/${s}/attributes`).subscribe((x) => {
+    }, error: (e) => { if (this.selectedSystem() === s) { this.rolesLoading.set(false); this.fail(e); } }});
+    this.api.get<any[]>(`/admin/users/${this.userId()}/systems/${s}/attributes`).subscribe({next: (x) => {
+      if (this.selectedSystem() !== s) return;
+      this.attributesLoading.set(false);
       for (const a of x) {
         const multi = !!a.Is_Multivalue || a.Data_Type === 'MULTISELECT';
         const k = multi
@@ -188,7 +133,7 @@ export class UserSystemsComponent implements OnInit {
             );
       }
       this.attributes.set(x);
-    });
+    }, error: (e) => { if (this.selectedSystem() === s) { this.attributesLoading.set(false); this.fail(e); } }});
   }
   async saveRoles() {
     if (!(await this.alerts.confirm('¿Guardar roles?', 'Los roles desmarcados serán quitados mediante baja lógica.')).isConfirmed) return;

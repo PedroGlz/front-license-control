@@ -1,3 +1,5 @@
+import { IconComponent } from '../core/icon.component';
+import { generatedCode } from '../core/generated-code';
 import { Component, input, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../core/api.service';
@@ -5,26 +7,27 @@ import { AlertService } from '../core/alert.service';
 @Component({
   standalone: true,
   selector: 'app-attribute-options',
-  imports: [FormsModule],
+  imports: [FormsModule, IconComponent],
   styleUrls: ['./forms.scss'],
   template: `<h3>Opciones del catálogo</h3>
     @for (o of options(); track o['Id_Option']) {
       <div class="grid">
-        <label>Código<input [(ngModel)]="o['Value_Code']" maxlength="100" /></label
-        ><label>Nombre<input [(ngModel)]="o['Display_Name']" maxlength="150" /></label
-        ><label>Orden<input type="number" [(ngModel)]="o['Sort_Order']" /></label
+        <label>Código<input [ngModel]="o['Value_Code']" readonly [ngModelOptions]="{standalone: true}" maxlength="100" /></label
+        ><label>Nombre<input [(ngModel)]="o['Display_Name']" [ngModelOptions]="{standalone: true}" maxlength="150" /></label
+        ><label>Orden<input type="number" [(ngModel)]="o['Sort_Order']" [ngModelOptions]="{standalone: true}" /></label
         >
       </div>
-      <button type="button" (click)="save(o)">Guardar opción</button><button type="button" (click)="remove(o)">Eliminar</button>
+      <div class="option-actions"><button type="button" class="icon-button" title="Guardar opción" aria-label="Guardar opción" (click)="save(o)"><app-icon name="save" /></button><button type="button" class="icon-button danger" title="Desactivar opción" aria-label="Desactivar opción" (click)="remove(o)"><app-icon name="trash" /></button></div>
     }
     <div class="grid" style="margin-top:20px">
-      <label>Código<input [(ngModel)]="newOption.Value_Code" maxlength="100" /></label
-      ><label>Nombre<input [(ngModel)]="newOption.Display_Name" maxlength="150" /></label>
+      <label>Código<input [ngModel]="code(newOption.Display_Name, 100)" readonly [ngModelOptions]="{standalone: true}" maxlength="100" /></label
+      ><label>Nombre<input [(ngModel)]="newOption.Display_Name" [ngModelOptions]="{standalone: true}" maxlength="150" /></label>
     </div>
-    <button type="button" (click)="add()">Agregar opción</button>
+    <div class="option-actions"><button type="button" [disabled]="!code(newOption.Display_Name, 100)" (click)="add()">Agregar opción</button><button type="button" class="secondary" (click)="newOption = { Value_Code: '', Display_Name: '', Sort_Order: 0 }">Cancelar</button></div>
     <p>{{ message() }}</p>`,
 })
 export class AttributeOptionsComponent implements OnInit {
+  code = generatedCode;
   attributeId = input.required<string>();
   api = inject(ApiService);
   alerts = inject(AlertService);
@@ -55,6 +58,7 @@ export class AttributeOptionsComponent implements OnInit {
     });
   }
   add() {
+    this.newOption.Value_Code = generatedCode(this.newOption.Display_Name, 100);
     this.api.post(`/admin/attributes/${this.attributeId()}/options`, this.newOption).subscribe({
       next: () => {
         this.newOption = { Value_Code: '', Display_Name: '', Sort_Order: 0 };

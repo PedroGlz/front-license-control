@@ -8,14 +8,14 @@ import { AlertService } from '../core/alert.service';
   styleUrls: ['./forms.scss'],
   template: `
     <h1>Auditoría</h1>
-    <input
+    <div class="table-filters audit-filters"><input
       placeholder="Buscar evento o usuario"
       [(ngModel)]="search"
       (keyup.enter)="page = 0; load()"
     /><button (click)="direction = direction === 'desc' ? 'asc' : 'desc'; load()">
       Fecha {{ direction === 'desc' ? '↓' : '↑' }}
     </button>
-    <div class="grid" style="margin:18px 0">
+    
       <label>Desde<input type="date" [(ngModel)]="filters.from" /></label
       ><label>Hasta<input type="date" [(ngModel)]="filters.to" /></label
       ><label
@@ -46,8 +46,7 @@ import { AlertService } from '../core/alert.service';
           <option value="FAILURE">Fallido</option>
         </datalist></label
       >
-    </div>
-    <button (click)="page = 0; load()">Aplicar filtros</button>
+    <button (click)="page = 0; load()">Aplicar filtros</button><button type="button" class="secondary" (click)="clearFilters()">Limpiar</button></div>
     <p class="error">{{ error() }}</p>
     @for (section of sections; track section.key) {
       <div class="panel" style="padding:18px;margin-top:18px">
@@ -84,6 +83,7 @@ import { AlertService } from '../core/alert.service';
   `,
 })
 export class AuditComponent {
+  clearFilters() { this.search = ''; this.filters = {from:'',to:'',user:'',system:'',eventType:'',result:''}; this.page = 0; this.load(); }
   page = 0;
   search = '';
   direction = 'desc';

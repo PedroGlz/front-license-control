@@ -1,10 +1,11 @@
+import { IconComponent } from '../core/icon.component';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 import { ThemeService } from '../core/theme.service';
 @Component({
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [IconComponent, RouterLink, RouterLinkActive, RouterOutlet],
   template: `<div class="shell">
     <button
       class="backdrop"
@@ -17,9 +18,7 @@ import { ThemeService } from '../core/theme.service';
       @for (g of menu; track g.title) {
         <h3>{{ g.title }}</h3>
         @for (i of g.items; track i.path) {
-          <a [routerLink]="i.path" routerLinkActive="active" (click)="open.set(false)">{{
-            i.label
-          }}</a>
+          <a [routerLink]="i.path" routerLinkActive="active" (click)="open.set(false)"><app-icon [name]="i.icon" /><span>{{ i.label }}</span></a>
         }
       }
     </aside>
@@ -35,7 +34,7 @@ import { ThemeService } from '../core/theme.service';
         >
           {{ theme.mode() === 'dark' ? '☀' : '☾' }}</button
         ><span class="user">{{ auth.user()?.firstName }} {{ auth.user()?.lastName }}</span
-        ><button class="link" (click)="auth.logout()">Salir</button>
+        ><button class="link logout" title="Cerrar sesión" aria-label="Cerrar sesión" (click)="auth.logout()"><app-icon name="logout" /></button>
       </header>
       <main><router-outlet /></main>
     </section>
@@ -78,7 +77,10 @@ import { ThemeService } from '../core/theme.service';
         margin: 24px 10px 8px;
       }
       a {
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 4px 0;
         color: inherit;
         text-decoration: none;
         padding: 9px 12px;
@@ -133,7 +135,11 @@ import { ThemeService } from '../core/theme.service';
       }
       .user {
         color: var(--text);
+        font-weight: 600;
+        font-size: 14px;
       }
+      .logout { display: inline-flex; padding: 9px; border-radius: 50%; }
+      .logout:hover { background: var(--primary-soft); }
       main {
         padding: 26px;
       }
@@ -181,29 +187,29 @@ export class LayoutComponent {
   theme = inject(ThemeService);
   open = signal(false);
   menu = [
-    { title: '', items: [{ label: 'Dashboard', path: '/dashboard' }] },
+//     { title: '', items: [{ label: 'Dashboard', path: '/dashboard', icon: 'home' }] },
     {
       title: 'Administración',
       items: [
-        { label: 'Usuarios', path: '/usuarios' },
-        { label: 'Tipos de usuario', path: '/tipos-usuario' },
-        { label: 'Sistemas', path: '/sistemas' },
-        { label: 'Roles', path: '/roles' },
-        { label: 'Permisos', path: '/permisos' },
-        { label: 'Rol → permisos', path: '/roles-permisos' },
-        { label: 'Atributos', path: '/atributos' },
+        { label: 'Usuarios', path: '/usuarios', icon: 'users' },
+        { label: 'Tipos de usuario', path: '/tipos-usuario', icon: 'badge' },
+        { label: 'Sistemas', path: '/sistemas', icon: 'monitor' },
+        { label: 'Roles', path: '/roles', icon: 'admin' },
+//         { label: 'Permisos', path: '/permisos', icon: 'key' },
+//         { label: 'Rol → permisos', path: '/roles-permisos', icon: 'rolePermissions' },
+        { label: 'Atributos', path: '/atributos', icon: 'tune' },
       ],
     },
     {
       title: 'Licenciamiento',
       items: [
-        { label: 'Aplicaciones', path: '/aplicaciones' },
-        { label: 'Versiones', path: '/versiones' },
-        { label: 'Accesos', path: '/accesos' },
-        { label: 'Licencias', path: '/licencias' },
-        { label: 'Dispositivos', path: '/dispositivos' },
+        { label: 'Aplicaciones', path: '/aplicaciones', icon: 'android' },
+        { label: 'Versiones', path: '/versiones', icon: 'package' },
+        { label: 'Accesos', path: '/accesos', icon: 'access' },
+        { label: 'Licencias', path: '/licencias', icon: 'license' },
+        { label: 'Dispositivos', path: '/dispositivos', icon: 'phone' },
       ],
     },
-    { title: 'Seguridad', items: [{ label: 'Auditoría', path: '/auditoria' }] },
+//     { title: 'Seguridad', items: [{ label: 'Auditoría', path: '/auditoria', icon: 'history' }] },
   ];
 }

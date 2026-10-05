@@ -1,3 +1,5 @@
+import { generatedCode } from '../core/generated-code';
+import { IconComponent } from '../core/icon.component';
 import { ChangeDetectorRef, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -155,13 +157,13 @@ for (const [resource, config] of Object.entries(CONFIG)) {
 
 @Component({
   standalone: true,
-  imports: [FormsModule, AttributeOptionsComponent],
+  imports: [IconComponent, FormsModule, AttributeOptionsComponent],
   styleUrls: ['./forms.scss'],
   template: `
     <div class="toolbar">
       <div>
         <h1>{{ cfg.title }}</h1>
-        <input
+        <div class="table-filters"><input
           placeholder="Buscar"
           [(ngModel)]="search"
           (keyup.enter)="page.set(0); load()"
@@ -179,6 +181,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
             }
           </select>
         }
+        <button type="button" class="secondary" (click)="search = ''; filterStatus = ''; filterSystem = ''; page.set(0); load()">Limpiar</button></div>
       </div>
       @if (resource !== 'devices') {
         <button (click)="open()">Nuevo</button>
@@ -208,7 +211,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                   }
                 </td>
               }
-              <td><button class="link" (click)="open(r)">Ver / Editar</button><button class="link" (click)="remove(r)">Eliminar</button></td>
+              <td><button type="button" class="icon-button" title="Ver / Editar" aria-label="Ver / Editar" (click)="open(r)"><app-icon name="edit" /></button><button type="button" class="icon-button danger" title="Desactivar" aria-label="Desactivar" (click)="remove(r)"><app-icon name="trash" /></button></td>
             </tr>
           } @empty {
             <tr>
@@ -228,14 +231,14 @@ for (const [resource, config] of Object.entries(CONFIG)) {
     @if (model()) {
       <div class="modal">
         <form #domainForm="ngForm" (ngSubmit)="save()">
-          <h2>{{ model()![cfg.id] ? 'Editar' : 'Nuevo' }} {{ cfg.title }}</h2>
+          <div class="dialog-heading"><h2>{{ model()![cfg.id] ? 'Editar' : 'Nuevo' }} {{ cfg.title }}</h2><button type="button" class="icon-button close-button" title="Cerrar" aria-label="Cerrar formulario" (click)="model.set(null)"><app-icon name="close" /></button></div>
           <div class="grid">
             @switch (resource) {
               @case ('user-types') {
                 <label
                   >Código<input
                     type="text"
-                    [(ngModel)]="model()!['Code']"
+                    [ngModel]="code()" readonly
                     name="Code"
                     required
                     maxlength="50"
@@ -261,7 +264,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                 <label
                   >Código<input
                     type="text"
-                    [(ngModel)]="model()!['Code']"
+                    [ngModel]="code()" readonly
                     name="Code"
                     required
                     maxlength="80"
@@ -327,6 +330,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                 
               }
               @case ('roles') {
+                <label>Código<input [ngModel]="code()" name="Code" readonly /></label>
                 <label
                   >Sistema *<select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
                     <option [ngValue]="null">Seleccione</option>
@@ -356,12 +360,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
               }
               @case ('permissions') {
                 <label
-                  >Sistema<input
-                    placeholder="Buscar opciones"
-                    [ngModel]="lookupSearch['systems'] || ''"
-                    [ngModelOptions]="{ standalone: true }"
-                    (ngModelChange)="searchLookup('systems', $event)"
-                  /><select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
+                  >Sistema<select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
                     <option [ngValue]="null">Seleccione</option>
                     @for (o of lookups['systems'] || []; track o.id) {
                       <option [value]="o.id">{{ o.label }}</option>
@@ -371,7 +370,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                 <label
                   >Código<input
                     type="text"
-                    [(ngModel)]="model()!['Code']"
+                    [ngModel]="code()" readonly
                     name="Code"
                     required
                     maxlength="120"
@@ -409,12 +408,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
               }
               @case ('attributes') {
                 <label
-                  >Sistema<input
-                    placeholder="Buscar opciones"
-                    [ngModel]="lookupSearch['systems'] || ''"
-                    [ngModelOptions]="{ standalone: true }"
-                    (ngModelChange)="searchLookup('systems', $event)"
-                  /><select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
+                  >Sistema<select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
                     <option [ngValue]="null">Seleccione</option>
                     @for (o of lookups['systems'] || []; track o.id) {
                       <option [value]="o.id">{{ o.label }}</option>
@@ -424,7 +418,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                 <label
                   >Código<input
                     type="text"
-                    [(ngModel)]="model()!['Code']"
+                    [ngModel]="code()" readonly
                     name="Code"
                     required
                     maxlength="100"
@@ -515,7 +509,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                 <label
                   >Código<input
                     type="text"
-                    [(ngModel)]="model()!['Code']"
+                    [ngModel]="code()" readonly
                     name="Code"
                     required
                     maxlength="80"
@@ -551,12 +545,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
               }
               @case ('application-access') {
                 <label
-                  >Usuario<input
-                    placeholder="Buscar opciones"
-                    [ngModel]="lookupSearch['users'] || ''"
-                    [ngModelOptions]="{ standalone: true }"
-                    (ngModelChange)="searchLookup('users', $event)"
-                  /><select [(ngModel)]="model()!['Id_Usuario']" name="Id_Usuario" required>
+                  >Usuario<select [(ngModel)]="model()!['Id_Usuario']" name="Id_Usuario" required>
                     <option [ngValue]="null">Seleccione</option>
                     @if (model()!['Id_Usuario'] && !knownUser(model()!['Id_Usuario'])) {
                       <option [value]="model()!['Id_Usuario']">
@@ -569,12 +558,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                   </select></label
                 >
                 <label
-                  >Aplicación<input
-                    placeholder="Buscar opciones"
-                    [ngModel]="lookupSearch['applications'] || ''"
-                    [ngModelOptions]="{ standalone: true }"
-                    (ngModelChange)="searchLookup('applications', $event)"
-                  /><select [(ngModel)]="model()!['Id_Application']" name="Id_Application" required>
+                  >Aplicación<select [(ngModel)]="model()!['Id_Application']" name="Id_Application" required>
                     <option [ngValue]="null">Seleccione</option>
                     @for (o of lookups['applications'] || []; track o.id) {
                       <option [value]="o.id">{{ o.label }}</option>
@@ -618,12 +602,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
               }
               @case ('licenses') {
                 <label
-                  >Usuario<input
-                    placeholder="Buscar opciones"
-                    [ngModel]="lookupSearch['users'] || ''"
-                    [ngModelOptions]="{ standalone: true }"
-                    (ngModelChange)="searchLookup('users', $event)"
-                  /><select [(ngModel)]="model()!['Id_Usuario']" name="Id_Usuario">
+                  >Usuario<select [(ngModel)]="model()!['Id_Usuario']" name="Id_Usuario">
                     <option [ngValue]="null">Seleccione</option>
                     @for (o of lookups['users'] || []; track o.id) {
                       <option [value]="o.id">{{ o.label }}</option>
@@ -631,12 +610,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                   </select></label
                 >
                 <label
-                  >Aplicación<input
-                    placeholder="Buscar opciones"
-                    [ngModel]="lookupSearch['applications'] || ''"
-                    [ngModelOptions]="{ standalone: true }"
-                    (ngModelChange)="searchLookup('applications', $event)"
-                  /><select [(ngModel)]="model()!['Id_Application']" name="Id_Application" required>
+                  >Aplicación<select [(ngModel)]="model()!['Id_Application']" name="Id_Application" required>
                     <option [ngValue]="null">Seleccione</option>
                     @for (o of lookups['applications'] || []; track o.id) {
                       <option [value]="o.id">{{ o.label }}</option>
@@ -644,12 +618,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                   </select></label
                 >
                 <label
-                  >Dispositivo<input
-                    placeholder="Buscar opciones"
-                    [ngModel]="lookupSearch['devices'] || ''"
-                    [ngModelOptions]="{ standalone: true }"
-                    (ngModelChange)="searchLookup('devices', $event)"
-                  /><select [(ngModel)]="model()!['Id_Device']" name="Id_Device" required>
+                  >Dispositivo<select [(ngModel)]="model()!['Id_Device']" name="Id_Device" required>
                     <option [ngValue]="null">Seleccione</option>
                     @for (o of lookups['devices'] || []; track o.id) {
                       <option [value]="o.id">{{ o.label }}</option>
@@ -796,14 +765,6 @@ export class DomainAdminComponent {
   knownUser(id: string) {
     return this.lookups['users']?.some((user) => user.id === id);
   }
-  lookupSearch: Record<string, string> = {};
-  searchLookup(type: string, search: string) {
-    this.lookupSearch[type] = search;
-    this.api.get<any[]>(`/admin/lookups/${type}`, { search }).subscribe((x) => {
-      this.lookups[type] = x;
-      this.changeDetector.markForCheck();
-    });
-  }
   load() {
     this.api
       .list(this.resource, this.search, this.page(), 25, {
@@ -895,9 +856,16 @@ export class DomainAdminComponent {
           },
     );
   }
+  code(): string {
+    const m = this.model();
+    if (m?.[this.cfg.id]) return m['Code'] || '';
+    const max = this.resource === 'user-types' ? 50 : this.resource === 'attributes' ? 100 : this.resource === 'permissions' ? 120 : 80;
+    return generatedCode(m?.['Name'], max);
+  }
   async save() {
     this.error.set('');
     const m = { ...this.model() };
+    if (this.administrative()) m['Code'] = this.code();
     delete m['Is_Active'];
     if (this.administrative()) delete m['Status'];
     if (this.resource === 'roles') { delete m['Code']; delete m['Is_System_Admin']; }

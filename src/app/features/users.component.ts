@@ -1,152 +1,16 @@
+import { IconComponent } from '../core/icon.component';
 import { ChangeDetectorRef, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { UserSecurityComponent } from './user-security.component';
+import { UserLicensingComponent } from './user-licensing.component';
 import { UserSystemsComponent } from './user-systems.component';
 import { ApiService } from '../core/api.service';
 import { AlertService } from '../core/alert.service';
 @Component({
   standalone: true,
-  imports: [FormsModule, UserSystemsComponent],
-  template: `<div class="toolbar">
-      <div>
-        <h1>Usuarios</h1>
-        <input
-          placeholder="Usuario, nombre o email"
-          [(ngModel)]="search"
-          (keyup.enter)="page.set(0); load()"
-        /><select [(ngModel)]="filterType" (ngModelChange)="page.set(0); load()">
-          <option value="">Todos los tipos</option>
-          @for (t of types; track t.id) {
-            <option [value]="t.id">{{ t.label }}</option>
-          }</select
-        >
-      </div>
-      <button (click)="edit()">Nuevo usuario</button>
-    </div>
-    <div class="panel">
-      <table>
-        <thead>
-          <tr>
-            <th (click)="sortBy('Username')">Usuario</th>
-            <th (click)="sortBy('First_Name')">Nombre</th>
-            <th (click)="sortBy('Email')">Email</th>
-            <th>Tipo</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (u of users(); track u['Id_User']) {
-            <tr>
-              <td>{{ u['Username'] }}</td>
-              <td>{{ u['First_Name'] }} {{ u['Last_Name'] }}</td>
-              <td>{{ u['Email'] }}</td>
-              <td>{{ typeName(u['Id_User_Type']) }}</td>
-              <td><button class="link" (click)="edit(u)">Ver / Editar</button><button class="link" (click)="remove(u)">Eliminar</button></td>
-            </tr>
-          }
-        </tbody>
-      </table>
-      <footer>
-        <button [disabled]="page() === 0" (click)="page.set(page() - 1); load()">Anterior</button
-        ><span>Página {{ page() + 1 }}</span
-        ><button [disabled]="users().length < 25" (click)="page.set(page() + 1); load()">
-          Siguiente
-        </button>
-      </footer>
-    </div>
-    @if (model()) {
-      <div class="modal">
-        <form #userForm="ngForm" (ngSubmit)="save()">
-          <h2>{{ model()!['Id_User'] ? 'Detalle del usuario' : 'Nuevo usuario' }}</h2>
-          <div class="grid">
-            @for (f of visibleFields(); track f.key) {
-              <label
-                >{{ f.label }}
-                @if (f.key === 'Id_User_Type') {
-                  <select [(ngModel)]="model()![f.key]" [name]="f.key" required>
-                    <option value="">Seleccione</option>
-                    @for (t of types; track t.id) {
-                      <option [value]="t.id">{{ t.label }}</option>
-                    }
-                  </select>
-                } @else {
-                  <input
-                    [type]="f.type || 'text'"
-                    [(ngModel)]="model()![f.key]"
-                    [name]="f.key"
-                    [required]="f.required || false"
-                    [maxlength]="f.max || 254"
-                    [minlength]="f.key === 'Password' ? 8 : 0"
-                  />
-                }
-              </label>
-            }
-          </div>
-          <div class="actions">
-            <button type="button" class="secondary" (click)="model.set(null)">Cancelar</button
-            ><button [disabled]="userForm.invalid">Guardar</button>
-          </div>
-          @if (model()!['Id_User']) {
-            <hr />
-            <h3>Cambiar contraseña</h3>
-            <div class="inline">
-              <input
-                type="password"
-                [(ngModel)]="newPassword"
-                name="newPassword"
-                minlength="8"
-                placeholder="Nueva contraseña"
-              /><button type="button" (click)="password()">Actualizar contraseña</button>
-            </div>
-            <app-user-systems [userId]="model()!['Id_User']" />
-          }
-        </form>
-      </div>
-    }
-    @if (error()) {
-      <div class="toast">{{ error() }}</div>
-    }`,
-  styleUrls: ['./forms.scss'],
-  styles: [
-    `
-      .badge {
-        background: var(--success-bg);
-        color: var(--success-text);
-        padding: 4px 8px;
-        border-radius: 12px;
-      }
-      .inline {
-        display: flex;
-        gap: 10px;
-        margin: 10px 0 20px;
-      }
-      .assignment {
-        border: 1px solid var(--border);
-        padding: 12px;
-        border-radius: 8px;
-        margin-top: 10px;
-        display: grid;
-        gap: 8px;
-      }
-      .role {
-        display: block;
-        margin: 7px;
-      }
-      .toast {
-        position: fixed;
-        right: 20px;
-        bottom: 20px;
-        background: var(--danger);
-        color: white;
-        padding: 12px;
-        border-radius: 8px;
-      }
-      hr {
-        border: 0;
-        border-top: 1px solid var(--border);
-        margin: 24px 0;
-      }
-    `,
-  ],
+  imports: [IconComponent, FormsModule, UserSystemsComponent, UserSecurityComponent, UserLicensingComponent],
+  templateUrl: './users.component.html',
+  styleUrls: ['./forms.scss', './user-detail.scss', './users.component.scss'],
 })
 export class UsersComponent {
   changeDetector = inject(ChangeDetectorRef);
@@ -165,6 +29,11 @@ export class UsersComponent {
   order = 'Username';
   direction = 'asc';
   page = signal(0);
+  tab = signal('general');
+  editing = signal(false);
+  tabs = [{key:'general',label:'General'},{key:'security',label:'Seguridad'},{key:'systems',label:'Sistemas'},{key:'roles',label:'Roles'},{key:'attributes',label:'Atributos'},{key:'licensing',label:'Licenciamiento'}];
+  initialConfirmation = '';
+  showInitialPassword = false;
   newPassword = '';
   newSystem = '';
   error = signal('');
@@ -177,11 +46,12 @@ export class UsersComponent {
     { key: 'Id_User_Type', label: 'Tipo de usuario', required: true },
     { key: 'Password', label: 'Contraseña', type: 'password', max: 72, required: true },
   ];
-  visibleFields() {
-    return this.model()?.['Id_User']
-      ? this.fields.filter((f) => f.key !== 'Password')
-      : this.fields;
-  }
+  visibleFields() { return this.fields.filter((f) => f.key !== 'Password'); }
+  labelName(label: string) { return label.replace(/^.*? - /, ''); }
+  fullName() { const m = this.model(); return [m?.['First_Name'],m?.['Last_Name'],m?.['Second_Last_Name']].filter(Boolean).join(' '); }
+  isActive() { const m = this.model(); return m?.['Is_Active'] !== false && m?.['Is_Active'] !== 0 && (!m?.['Status'] || m['Status'] === 'ACTIVE'); }
+  initialMatches() { return !!this.model()?.['Password'] && this.model()!['Password'] === this.initialConfirmation; }
+  cancelEdit() { const id = this.model()?.['Id_User']; const original = this.users().find(u => u['Id_User'] === id); if (original) { this.model.set({...original}); this.editing.set(false); } else this.model.set(null); }
   constructor() {
     this.api.get<any[]>('/admin/lookups/user-types').subscribe((x) => {
       this.types = x;
@@ -208,11 +78,13 @@ export class UsersComponent {
     this.load();
   }
   typeName(id: string) {
-    return this.types.find((x) => x.id === id)?.label || id;
+    return this.types.find((x) => x.id === id)?.label ? this.labelName(this.types.find((x) => x.id === id)!.label) : 'Tipo no disponible';
   }
   edit(u?: Record<string, any>) {
     this.error.set('');
     this.newPassword = '';
+    this.initialConfirmation = ''; this.showInitialPassword = false;
+    this.tab.set('general'); this.editing.set(!u);
     this.model.set(
       u
         ? { ...u }
@@ -230,6 +102,7 @@ export class UsersComponent {
     if (u) this.loadSystems();
   }
   async save() {
+    if (!this.model()?.['Id_User'] && !this.initialMatches()) return;
     const m = { ...this.model() };
     for (const key of ['Status', 'Is_Active', 'Employee_Number', 'External_Reference']) delete m[key];
     if (m['Id_User']) delete m['Password'];
@@ -239,11 +112,16 @@ export class UsersComponent {
     q.subscribe({
       next: (u) => {
         this.model.set(u);
+        this.editing.set(false); this.initialConfirmation = ''; this.showInitialPassword = false;
         this.load();
         this.loadSystems();
         void this.alerts.success(m['Id_User'] ? 'Usuario actualizado' : 'Usuario creado');
       },
-      error: (e) => void this.alerts.error('Error al guardar', this.alerts.message(e)),
+      error: (e) => {
+        let message = !m['Id_User'] && e.status >= 500 ? 'Ocurrió un error al crear el usuario.' : this.alerts.message(e);
+        if (e.status === 409 && ['El nombre de usuario ya existe','El correo electrónico ya está registrado'].includes(message)) message += '.';
+        void this.alerts.error('No fue posible guardar el usuario', message);
+      },
     });
   }
   async remove(user: Record<string, any>) {

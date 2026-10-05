@@ -1,0 +1,75 @@
+@if (section() === 'systems') {
+  <section class="user-card"><h2>Sistemas asignados</h2><p>Administra en qué sistemas puede trabajar el usuario.</p>
+    <label class="search-field">Buscar sistema<input placeholder="Escribe el nombre del sistema" [(ngModel)]="systemSearch" /></label>
+    @if (loading()) { <p role="status">Cargando sistemas…</p> }
+    @else {
+      @if (!assigned().length) { <div class="empty"><h3>No hay sistemas asignados</h3><p>Elige un sistema de la lista y pulsa Asignar.</p></div> }
+      <div class="card-list">
+        @for (system of visibleSystems(); track system.id) {
+          <article class="user-card" style="background:var(--surface-alt);margin:0"><h3>{{ name(system.label) }}</h3><span class="badge" [class.inactive]="!accessFor(system.id)">{{ accessFor(system.id) ? 'Asignado' : 'No asignado' }}</span>
+            <div class="user-actions">@if (accessFor(system.id); as access) { <button type="button" class="danger" [disabled]="assignmentBusy()" (click)="removeSystem(access)">Quitar</button> } @else { <button type="button" [disabled]="assignmentBusy()" (click)="newSystem = system.id; assign()">Asignar</button> }</div>
+          </article>
+        } @empty { <div class="empty"><p>No se encontraron sistemas con ese nombre.</p></div> }
+      </div>
+    }
+  </section>
+}
+@if (section() === 'roles' || section() === 'attributes') {
+  <section class="user-card"><h2>{{ section() === 'roles' ? 'Roles del usuario' : 'Atributos específicos' }}</h2><p>Selecciona un sistema asignado para administrar {{ section() === 'roles' ? 'sus roles.' : 'sus datos específicos.' }}</p>
+    <label class="search-field">Sistema<select [ngModel]="selectedSystem()" (ngModelChange)="select($event)"><option value="">Seleccione un sistema</option>@for (access of assigned(); track access['Id_System']) { <option [value]="access['Id_System']">{{ access['System_Name'] }}</option> }</select></label>
+    @if (!assigned().length && !loading()) { <div class="empty"><h3>No hay sistemas asignados</h3><p>Asigna primero un sistema desde la pestaña Sistemas.</p><button type="button" (click)="sectionChange.emit('systems')">Asignar sistema</button></div> }
+    @else if (!selectedSystem()) { <div class="empty"><h3>Selecciona un sistema para continuar</h3><p>Verás únicamente {{ section() === 'roles' ? 'los roles' : 'los atributos' }} de ese sistema.</p></div> }
+    @else if (section() === 'roles') {
+      @if (rolesLoading()) { <p role="status">Cargando roles…</p> } @else {
+        <div class="card-list">@for (role of roles(); track role['Id_Role']) { <label class="choice"><input type="checkbox" [(ngModel)]="role['Assigned']" /><span>{{ role['Name'] }}<small>{{ role['Description'] || 'Sin descripción adicional' }}</small></span></label> }
+          @empty { <div class="empty"><h3>No hay roles disponibles para este sistema</h3><p>Los roles se configuran en el módulo Roles.</p></div> }
+        </div>
+        @if (roles().length) { <div class="user-actions"><button type="button" class="secondary" (click)="select(selectedSystem())">Cancelar</button><button type="button" (click)="saveRoles()">Guardar roles</button></div> }
+      }
+    } @else {
+      @if (attributesLoading()) { <p role="status">Cargando atributos…</p> } @else {
+        <h3>Datos específicos de {{ systemName() }}</h3>
+        <div class="user-grid">
+          @for (a of attributes(); track a['Id_Attribute']) {
+              <label
+                >{{ a['Name'] }}{{ a['Is_Required'] ? ' *' : '' }}
+                @if (
+                  a['Data_Type'] === 'MULTISELECT' ||
+                  (a['Is_Multivalue'] && a['Data_Type'] === 'SELECT')
+                ) {
+                  <select multiple [(ngModel)]="a['_value']" [ngModelOptions]="{standalone: true}">
+                    @for (o of a['_options']; track o['Value_Code']) {
+                      <option [value]="o['Value_Code']">{{ o['Display_Name'] }}</option>
+                    }
+                  </select>
+                } @else if (a['Data_Type'] === 'SELECT') {
+                  <select [(ngModel)]="a['_value']" [ngModelOptions]="{standalone: true}" [required]="a['Is_Required']">
+                    <option [ngValue]="null">Sin valor</option>
+                    @for (o of a['_options']; track o['Value_Code']) {
+                      <option [value]="o['Value_Code']">{{ o['Display_Name'] }}</option>
+                    }
+                  </select>
+                } @else if (a['Data_Type'] === 'BOOLEAN' && !a['Is_Multivalue']) {
+                  <div class="user-heading"><input type="checkbox" [(ngModel)]="a['_value']" [ngModelOptions]="{standalone: true}" [attr.aria-label]="a['Name']" /><span>{{ a['_value'] === null ? 'Sin definir' : a['_value'] ? 'Sí' : 'No' }}</span>@if (!a['Is_Required']) { <button type="button" class="secondary" (click)="a['_value'] = null">Sin definir</button> }</div>
+                } @else if (a['Data_Type'] === 'JSON' || a['Is_Multivalue']) {
+                  <textarea [(ngModel)]="a['_value']" [ngModelOptions]="{standalone: true}" placeholder="JSON" rows="3"></textarea>
+                } @else {
+                  <input
+                    [type]="inputType(a['Data_Type'])"
+                    [(ngModel)]="a['_value']" [ngModelOptions]="{standalone: true}"
+                    [required]="a['Is_Required']"
+                    [min]="a['Min_Value']"
+                    [max]="a['Max_Value']"
+                    [step]="a['Data_Type'] === 'DECIMAL' ? 'any' : '1'"
+                  />
+                }
+              </label>
+            }
+
+        </div>
+        @if (!attributes().length) { <div class="empty"><h3>No hay atributos configurados</h3><p>Este sistema no requiere datos adicionales para el usuario.</p></div> }
+        @else { <div class="user-actions"><button type="button" class="secondary" (click)="select(selectedSystem())">Cancelar</button><button type="button" (click)="saveAttributes()">Guardar atributos</button></div> }
+      }
+    }
+  </section>
+}

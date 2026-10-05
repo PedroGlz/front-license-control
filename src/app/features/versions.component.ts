@@ -1,14 +1,15 @@
+import { IconComponent } from '../core/icon.component';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../core/api.service';
 import { AlertService } from '../core/alert.service';
 @Component({
   standalone: true,
-  imports: [FormsModule],
+  imports: [IconComponent, FormsModule],
   styleUrls: ['./forms.scss'],
   template: `<h1>Versiones APK</h1>
     <div class="toolbar">
-      <select [(ngModel)]="application" (ngModelChange)="page = 0; load()">
+      <div class="table-filters"><select [(ngModel)]="application" (ngModelChange)="page = 0; load()">
         <option value="">Seleccione aplicación</option>
         @for (a of applications(); track a.id) {
           <option [value]="a.id">{{ a.label }}</option>
@@ -17,7 +18,7 @@ import { AlertService } from '../core/alert.service';
         placeholder="Buscar versión o archivo"
         [(ngModel)]="search"
         (keyup.enter)="page = 0; load()"
-      /><button
+      /><button type="button" class="secondary" (click)="search = ''; application = ''; page = 0; rows.set([])">Limpiar</button></div><button
         [disabled]="!application"
         (click)="edit.set({ Version_Name: '', Minimum_Android: '', Release_Notes: '' })"
       >
@@ -50,7 +51,7 @@ import { AlertService } from '../core/alert.service';
                   v['Is_Published'] ? 'PUBLICADA' : 'NO PUBLICADA'
                 }}</span>
               </td>
-              <td><button class="link" (click)="open(v)">Ver / Editar</button><button class="link" (click)="remove(v)">Eliminar</button></td>
+              <td><button type="button" class="icon-button" title="Ver / Editar" aria-label="Ver / Editar" (click)="open(v)"><app-icon name="edit" /></button><button type="button" class="icon-button danger" title="Desactivar" aria-label="Desactivar" (click)="remove(v)"><app-icon name="trash" /></button></td>
             </tr>
           }
         </tbody>
@@ -66,7 +67,7 @@ import { AlertService } from '../core/alert.service';
     @if (edit()) {
       <div class="modal">
         <form #f="ngForm" (ngSubmit)="save()">
-          <h2>{{ edit()!['Id_Version'] ? 'Editar versión' : 'Cargar APK' }}</h2>
+          <div class="dialog-heading"><h2>{{ edit()!['Id_Version'] ? 'Editar versión' : 'Cargar APK' }}</h2><button type="button" class="icon-button close-button" title="Cerrar" aria-label="Cerrar formulario" (click)="edit.set(null)"><app-icon name="close" /></button></div>
           <div class="grid">
             <label
               >Nombre de versión<input

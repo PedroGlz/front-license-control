@@ -117,7 +117,7 @@ export class LoginComponent {
     this.loading.set(true);
     const v = this.form.getRawValue();
     this.a.login(v.username, v.password).subscribe({
-      next: () => this.r.navigateByUrl('/dashboard'),
+      next: () => this.r.navigateByUrl('/usuarios'),
       error: (e) => {
         this.loading.set(false);
         void this.alerts.error(
