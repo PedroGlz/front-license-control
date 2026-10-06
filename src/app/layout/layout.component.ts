@@ -203,10 +203,12 @@ export class LayoutComponent {
     {
       title: 'Licenciamiento',
       items: [
-        { label: 'Versiones', path: '/versiones', icon: 'package' },
-        { label: 'Accesos', path: '/accesos', icon: 'access' },
+        { label: 'Clientes', path: '/clientes', icon: 'users' },
         { label: 'Licencias', path: '/licencias', icon: 'license' },
+        { label: 'Versiones', path: '/versiones', icon: 'package' },
+        { label: 'Asignaciones de licencia', path: '/accesos', icon: 'access' },
         { label: 'Dispositivos', path: '/dispositivos', icon: 'phone' },
+        { label: 'Códigos de activación', path: '/codigos-activacion', icon: 'access' },
       ],
     },
 //     { title: 'Seguridad', items: [{ label: 'Auditoría', path: '/auditoria', icon: 'history' }] },

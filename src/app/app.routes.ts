@@ -23,8 +23,10 @@ export const routes: Routes = [
     { path: 'aplicaciones', pathMatch: 'full', redirectTo: 'sistemas' }, // LEGACY TEMPORAL: enlaces anteriores.
     { path: 'versiones', component: VersionsComponent },
     { path: 'accesos', component: DomainAdminComponent, data: { domain: 'application-access' } },
-    { path: 'licencias', component: DomainAdminComponent, data: { domain: 'licenses' } },
+    { path: 'clientes', loadComponent: () => import('./features/customers.component').then(m => m.CustomersComponent) },
+    { path: 'licencias', loadComponent: () => import('./features/entitlements.component').then(m => m.EntitlementsComponent) },
     { path: 'dispositivos', component: DomainAdminComponent, data: { domain: 'devices' } },
+    { path: 'codigos-activacion', loadComponent: () => import('./features/enrollment-codes.component').then(m => m.EnrollmentCodesComponent) },
 //     { path: 'auditoria', component: AuditComponent },
     { path: '', pathMatch: 'full', redirectTo: 'usuarios' }
   ]},

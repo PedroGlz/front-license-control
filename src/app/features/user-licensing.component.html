@@ -1,16 +1,16 @@
 <section class="user-card">
-  <div class="card-heading"><div><h2>Sistemas y licencias</h2><p>Accesos, vigencias y dispositivos del usuario, separados de sus roles.</p></div><a class="action-link secondary" routerLink="/accesos">Crear acceso</a></div>
+  <div class="card-heading"><div><h2>Sistemas y licencias</h2><p>Asignaciones, vigencias y dispositivos del usuario, separados de sus roles.</p></div><a class="action-link secondary" routerLink="/accesos">Crear asignación de licencia</a></div>
   @if (loading()) { <p role="status">Cargando licenciamiento…</p> }
   @else if (failed()) { <div class="empty"><p>No pudimos consultar las licencias.</p><button type="button" (click)="load()">Volver a intentar</button></div> }
   @else {
     @for (app of assignedApplications(); track app.id) {
       <article class="user-card" style="background:var(--surface-alt)"><h3>{{ app.name }}</h3>
         @if (access(app.id); as access) {
-          <dl><div><dt>Acceso al sistema</dt><dd><span class="badge" [class.inactive]="access['Status'] !== 'ACTIVE'">{{ status(access['Status']) }}</span></dd></div>
+          <dl><div><dt>Asignación de licencia</dt><dd><span class="badge" [class.inactive]="access['Status'] !== 'ACTIVE'">{{ status(access['Status']) }}</span></dd></div>
             <div><dt>Dispositivos permitidos</dt><dd>{{ access['Max_Devices'] }}</dd></div>
-            <div><dt>Vigencia del acceso</dt><dd>{{ access['Valid_From'] | date:'dd/MM/yyyy' }} — {{ access['Valid_Until'] ? (access['Valid_Until'] | date:'dd/MM/yyyy') : 'Sin fecha límite' }}</dd></div>
+            <div><dt>Vigencia de la asignación</dt><dd>{{ access['Valid_From'] | date:'dd/MM/yyyy' }} — {{ access['Valid_Until'] ? (access['Valid_Until'] | date:'dd/MM/yyyy') : 'Sin fecha límite' }}</dd></div>
             <div><dt>Dispositivos con licencia</dt><dd>{{ deviceCount(app.id) }} de {{ access['Max_Devices'] }}</dd></div></dl>
-          <button type="button" class="secondary" (click)="open('application-access', access)">Editar acceso</button>
+          <button type="button" class="secondary" (click)="open('application-access', access)">Editar asignación</button>
         }
         @for (license of appLicenses(app.id); track license['Id_License']) {
           <div style="margin-top:20px"><div class="card-heading"><h4>Licencia</h4><span class="badge" [class.inactive]="license['Status'] !== 'ACTIVE'">{{ status(license['Status']) }}</span></div>
@@ -26,11 +26,11 @@
           <div class="user-actions"><button type="button" class="secondary" (click)="deviceApplication.set('')">Cerrar dispositivos</button></div>
         }
       </article>
-    } @empty { <div class="empty"><h3>No hay licencias asignadas</h3><p>Cuando el usuario tenga acceso a una aplicación licenciada, aparecerá aquí.</p><a class="action-link" routerLink="/accesos">Crear acceso</a></div> }
+    } @empty { <div class="empty"><h3>No hay licencias asignadas</h3><p>Cuando el usuario tenga acceso a una aplicación licenciada, aparecerá aquí.</p><a class="action-link" routerLink="/accesos">Crear asignación de licencia</a></div> }
   }
 </section>
 @if (editor(); as edit) {
-  <section class="user-card"><h3>{{ edit.resource === 'licenses' ? 'Editar licencia' : 'Editar acceso a aplicación' }}</h3><p>La aplicación, el usuario y el dispositivo se conservan.</p>
+  <section class="user-card"><h3>{{ edit.resource === 'licenses' ? 'Editar licencia' : 'Editar asignación de licencia' }}</h3><p>La aplicación, el usuario y el dispositivo se conservan.</p>
     <form #licenseForm="ngForm" (ngSubmit)="save()"><div class="user-grid">
       <label>Desde<input type="date" [(ngModel)]="edit.row['Valid_From']" name="Valid_From" required /></label>
       <label>Hasta<input type="date" [(ngModel)]="edit.row['Valid_Until']" name="Valid_Until" [required]="edit.resource === 'licenses'" [min]="edit.row['Valid_From']" /></label>

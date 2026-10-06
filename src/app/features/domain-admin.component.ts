@@ -91,7 +91,7 @@ const CONFIG: Record<string, { title: string; id: string; fields: Field[] }> = {
     ],
   },
   'application-access': {
-    title: 'Accesos a sistemas',
+    title: 'Asignaciones de licencia',
     id: 'Id_Access',
     fields: [
       { key: 'Id_Usuario', label: 'Usuario', lookup: 'users' },
@@ -162,14 +162,14 @@ for (const [resource, config] of Object.entries(CONFIG)) {
         @if (hasSystem()) {
           <select [(ngModel)]="filterSystem" (ngModelChange)="page.set(0); load()">
             <option value="">Todos los sistemas</option>
-            @for (s of (['licenses','application-access'].includes(resource) ? lookups['licensed-systems'] : lookups['systems']) || []; track s.id) {
+            @for (s of (resource === 'application-access' ? userLicensedSystems() : resource === 'licenses' ? lookups['licensed-systems'] : lookups['systems']) || []; track s.id) {
               <option [value]="s.id">{{ s.label }}</option>
             }
           </select>
         }
         <button type="button" class="secondary" (click)="search = ''; filterStatus = ''; filterSystem = ''; page.set(0); load()">Limpiar</button></div>
       </div>
-      <button (click)="open()">{{ resource === 'devices' ? 'Nuevo dispositivo' : 'Nuevo' }}</button>
+      @if (resource !== 'devices') { <button (click)="open()">Nuevo</button> }
     </div>
     <div class="panel">
       <table>
@@ -195,7 +195,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                   }
                 </td>
               }
-              <td><button type="button" class="icon-button" title="Ver / Editar" aria-label="Ver / Editar" (click)="open(r)"><app-icon name="edit" /></button><button type="button" class="icon-button danger" title="Desactivar" aria-label="Desactivar" (click)="remove(r)"><app-icon name="trash" /></button></td>
+              <td><button type="button" class="icon-button" title="Ver / Editar" aria-label="Ver / Editar" (click)="open(r)"><app-icon name="edit" /></button>@if (resource !== 'devices') { <button type="button" class="icon-button danger" title="Desactivar" aria-label="Desactivar" (click)="remove(r)"><app-icon name="trash" /></button> } @if (resource === 'devices' && r['Device_Only'] && r['Status'] !== 'REVOKED') { <button type="button" class="secondary" (click)="retire(r,'LOST')">Marcar perdido</button><button type="button" class="secondary" (click)="retire(r,'REPLACED')">Reemplazar</button> }</td>
             </tr>
           } @empty {
             <tr>
@@ -486,7 +486,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                 <label
                   >Sistema<select [(ngModel)]="model()!['Id_System']" name="Id_System" [disabled]="!!model()!['Id_Access']" required>
                     <option [ngValue]="null">Seleccione</option>
-                    @for (o of lookups['licensed-systems'] || []; track o.id) {
+                    @for (o of userLicensedSystems(); track o.id) {
                       <option [value]="o.id">{{ o.label }}</option>
                     }
                   </select></label
@@ -552,7 +552,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
               }
 
               @case ('devices') {
-                <label>Nombre *<input [(ngModel)]="model()!['Display_Name']" name="Display_Name" required maxlength="150" /></label>
+                <label>Nombre opcional<input [(ngModel)]="model()!['Display_Name']" name="Display_Name" maxlength="150" /></label>
                 <label>Fabricante<input [(ngModel)]="model()!['Manufacturer']" name="Manufacturer" maxlength="100" /></label>
                 <label>Modelo<input [(ngModel)]="model()!['Model']" name="Model" maxlength="100" /></label>
                 <label>Versión Android<input [(ngModel)]="model()!['Android_Version']" name="Android_Version" maxlength="50" /></label>
@@ -561,13 +561,8 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                 }
                 <label>Notas<textarea [(ngModel)]="model()!['Notes']" name="Notes" maxlength="2000" rows="3"></textarea></label>
                 @if (model()!['Id_Device']) {
-                  <label>Estado<input [value]="statusLabel(model()!['Status'])" readonly /></label>
+                  <label>Estado<select [(ngModel)]="model()!['Status']" name="Status"><option value="PENDING">Pendiente</option><option value="ACTIVE" [disabled]="!model()!['Public_Key_Fingerprint']">Activo</option><option value="SUSPENDED">Suspendido</option>@if (!model()!['Device_Only'] || model()!['Status'] === 'REVOKED') { <option value="REVOKED">Revocado</option> }<option value="INACTIVE">Inactivo</option></select></label>
                   <label>Origen<input [value]="model()!['Origin']" readonly /></label>
-                  <label>Fingerprint<input [value]="model()!['Public_Key_Fingerprint'] || 'Sin vincular'" readonly /></label>
-                  <label>Identificador<input [value]="model()!['Device_UUID'] || '—'" readonly /></label>
-                  <label>Android ID<input [value]="model()!['Android_ID'] || '—'" readonly /></label>
-                  <label>Keystore<input [value]="model()!['Key_Security_Level'] || 'UNKNOWN'" readonly /></label>
-                  <label>Attestation<input [value]="model()!['Attestation_Verified'] ? 'Verificada' : model()!['Attestation_Available'] ? 'Disponible, no verificada' : 'No disponible'" readonly /></label>
                   <label>Registro<input [value]="model()!['Registered_At'] || '—'" readonly /></label>
                   <label>Enrolamiento<input [value]="model()!['Enrolled_At'] || 'Pendiente'" readonly /></label>
                   <label>Última validación<input [value]="model()!['Last_Validation_At'] || 'Sin validar'" readonly /></label>
@@ -625,10 +620,18 @@ export class DomainAdminComponent {
     });
   }
   formTitle() {
-    const titles: Record<string,string[]> = {'licenses':['Nueva licencia','Editar licencia'],'devices':['Nuevo dispositivo','Editar dispositivo'],'application-access':['Autorizar usuario','Editar acceso']};
+    const titles: Record<string,string[]> = {'licenses':['Nueva licencia','Editar licencia'],'devices':['Nuevo dispositivo','Editar dispositivo'],'application-access':['Nueva asignación de licencia','Editar asignación de licencia']};
     return titles[this.resource] ? titles[this.resource][this.model()?.[this.cfg.id] ? 1 : 0] : (this.model()?.[this.cfg.id] ? 'Editar ' : 'Nuevo ') + this.cfg.title;
   }
+  async retire(row: Record<string,any>, reason: string) {
+    if (!(await this.alerts.confirm(reason === 'LOST' ? '¿Marcar perdido?' : '¿Reemplazar dispositivo?', 'Se revocarán sus asignaciones, se liberará el cupo y no podrá volver a renovar. El historial se conserva.')).isConfirmed) return;
+    this.api.post('/admin/devices/' + row['Id_Device'] + '/retire', {reason}).subscribe({
+      next: () => { this.load(); void this.alerts.success('Dispositivo revocado'); },
+      error: e => void this.alerts.error('No fue posible revocar', this.alerts.message(e)),
+    });
+  }
   selectedApplication() { return this.lookups['licensed-systems']?.find(a => a.id === this.model()?.['Id_System']); }
+  userLicensedSystems() { return (this.lookups['licensed-systems'] || []).filter(s => s.Licensing_Mode === 'USER_DEVICE'); }
   selectedDevice() { return this.lookups['devices']?.find(d => d.id === this.model()?.['Id_Device']); }
   statusLabel(value: string) { return ({ACTIVE:'Activo',INACTIVE:'Inactivo',PENDING:'Pendiente',ENROLLED:'Enrolado',SUSPENDED:'Suspendido',REVOKED:'Revocado',EXPIRED:'Vencido'} as Record<string,string>)[value] || value; }
   knownUser(id: string) {
@@ -675,9 +678,11 @@ export class DomainAdminComponent {
     if (this.resource === 'devices')
       return [
         { key: 'Display_Name', label: 'Dispositivo' },
-        { key: 'Assigned_Users', label: 'Usuarios' },
-        { key: 'Assigned_Applications', label: 'Aplicaciones' },
-        { key: 'Public_Key_Fingerprint', label: 'Fingerprint' },
+        { key: 'Manufacturer', label: 'Fabricante' },
+        { key: 'Model', label: 'Modelo' },
+        { key: 'Android_Version', label: 'Android' },
+        { key: 'App_Version', label: 'Versión APK' },
+        { key: 'Enrolled_At', label: 'Activación' },
         { key: 'Last_Validation_At', label: 'Última validación' },
         { key: 'Status', label: 'Estatus' },
       ];
