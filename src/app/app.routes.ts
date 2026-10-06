@@ -24,7 +24,11 @@ export const routes: Routes = [
     { path: 'versiones', component: VersionsComponent },
     { path: 'accesos', component: DomainAdminComponent, data: { domain: 'application-access' } },
     { path: 'clientes', loadComponent: () => import('./features/customers.component').then(m => m.CustomersComponent) },
-    { path: 'licencias', loadComponent: () => import('./features/entitlements.component').then(m => m.EntitlementsComponent) },
+    { path: 'licencias', loadComponent: () => import('./features/license-tabs.component').then(m => m.LicenseTabsComponent), children: [
+      { path: 'usuario-dispositivo', component: DomainAdminComponent, data: { domain: 'licenses' } },
+      { path: 'solo-dispositivo', loadComponent: () => import('./features/entitlements.component').then(m => m.EntitlementsComponent) },
+      { path: '', pathMatch: 'full', redirectTo: 'usuario-dispositivo' },
+    ] },
     { path: 'dispositivos', component: DomainAdminComponent, data: { domain: 'devices' } },
     { path: 'codigos-activacion', loadComponent: () => import('./features/enrollment-codes.component').then(m => m.EnrollmentCodesComponent) },
 //     { path: 'auditoria', component: AuditComponent },

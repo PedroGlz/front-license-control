@@ -107,7 +107,7 @@ const CONFIG: Record<string, { title: string; id: string; fields: Field[] }> = {
     id: 'Id_License',
     fields: [
       { key: 'Id_Usuario', label: 'Usuario', lookup: 'users' },
-      { key: 'Id_System', label: 'Sistema', lookup: 'licensed-systems' },
+      { key: 'Id_System', label: 'Sistema', lookup: 'user-licensed-systems' },
       { key: 'Id_Device', label: 'Dispositivo', lookup: 'devices' },
       { key: 'Valid_From', label: 'Desde', type: 'date' },
       { key: 'Valid_Until', label: 'Hasta', type: 'date' },
@@ -162,7 +162,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
         @if (hasSystem()) {
           <select [(ngModel)]="filterSystem" (ngModelChange)="page.set(0); load()">
             <option value="">Todos los sistemas</option>
-            @for (s of (resource === 'application-access' ? userLicensedSystems() : resource === 'licenses' ? lookups['licensed-systems'] : lookups['systems']) || []; track s.id) {
+            @for (s of (resource === 'application-access' ? userLicensedSystems() : resource === 'licenses' ? lookups['user-licensed-systems'] : lookups['systems']) || []; track s.id) {
               <option [value]="s.id">{{ s.label }}</option>
             }
           </select>
@@ -278,8 +278,8 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                     name="Description"
                     maxlength="500"
                 /></label>
-                <section style="grid-column:1/-1">
-                  <h3>Licenciamiento opcional</h3>
+                @if (model()!['System_Type'] === 'ANDROID') { <section style="grid-column:1/-1">
+                  <h3>Licenciamiento Android opcional</h3>
                   <div class="grid">
                     <label>Modalidad<select [(ngModel)]="model()!['Licensing_Mode']" name="Licensing_Mode">
                       <option [ngValue]="null">Sin licenciamiento</option>
@@ -289,8 +289,9 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                     @if (model()!['Licensing_Mode'] || model()!['System_Type'] === 'ANDROID') {
                       <label>Package name<input [(ngModel)]="model()!['Package_Name']" name="Package_Name" maxlength="255" /></label>
                     }
+                    @if (model()!['Licensing_Mode']) { <label>Días offline<input type="number" name="Offline_Validity_Days" [(ngModel)]="model()!['Offline_Validity_Days']" min="1" max="30" step="1" required /></label> }
                   </div>
-                </section>
+                </section> }
                 
               }
               @case ('roles') {
@@ -530,7 +531,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
               @case ('licenses') {
                 <label>Sistema *<select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
                   <option [ngValue]="null">Seleccione</option>
-                  @for (o of lookups['licensed-systems'] || []; track o.id) { <option [value]="o.id">{{ o.label }}</option> }
+                  @for (o of lookups['user-licensed-systems'] || []; track o.id) { <option [value]="o.id">{{ o.label }}</option> }
                 </select></label>
                 <label>Dispositivo *<select [(ngModel)]="model()!['Id_Device']" name="Id_Device" required>
                   <option [ngValue]="null">Seleccione</option>
@@ -630,7 +631,7 @@ export class DomainAdminComponent {
       error: e => void this.alerts.error('No fue posible revocar', this.alerts.message(e)),
     });
   }
-  selectedApplication() { return this.lookups['licensed-systems']?.find(a => a.id === this.model()?.['Id_System']); }
+  selectedApplication() { return (this.lookups['user-licensed-systems'] || this.lookups['licensed-systems'])?.find(a => a.id === this.model()?.['Id_System']); }
   userLicensedSystems() { return (this.lookups['licensed-systems'] || []).filter(s => s.Licensing_Mode === 'USER_DEVICE'); }
   selectedDevice() { return this.lookups['devices']?.find(d => d.id === this.model()?.['Id_Device']); }
   statusLabel(value: string) { return ({ACTIVE:'Activo',INACTIVE:'Inactivo',PENDING:'Pendiente',ENROLLED:'Enrolado',SUSPENDED:'Suspendido',REVOKED:'Revocado',EXPIRED:'Vencido'} as Record<string,string>)[value] || value; }
@@ -721,6 +722,7 @@ export class DomainAdminComponent {
             Status: this.resource === 'devices' ? 'PENDING' : 'ACTIVE',
             Valid_From: ['licenses','application-access'].includes(this.resource) ? new Date().toISOString().slice(0,10) : undefined,
             Licensing_Mode: this.resource === 'systems' ? null : 'USER_DEVICE',
+            Offline_Validity_Days: 7,
             Max_Devices: 1,
             Sort_Order: 0,
             Is_Required: false,
@@ -741,6 +743,7 @@ export class DomainAdminComponent {
     const m = { ...this.model() };
     if (this.administrative()) m['Code'] = this.code();
     delete m['Is_Active'];
+    if (this.resource === 'systems' && m['System_Type'] !== 'ANDROID') { m['Licensing_Mode'] = null; m['Package_Name'] = null; delete m['Offline_Validity_Days']; }
     if (this.resource === 'licenses') {
       const app = this.selectedApplication();
       if (!app) { void this.alerts.warning('Validación', 'Seleccione un sistema con licenciamiento activo'); return; }
