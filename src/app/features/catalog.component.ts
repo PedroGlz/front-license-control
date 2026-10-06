@@ -207,7 +207,6 @@ export class CatalogComponent {
     roles: 'Id_Role',
     permissions: 'Id_Permission',
     attributes: 'Id_Attribute',
-    applications: 'Id_Application',
     devices: 'Id_Device',
     licenses: 'Id_License',
     'application-access': 'Id_Access',

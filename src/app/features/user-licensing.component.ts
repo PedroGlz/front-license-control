@@ -35,18 +35,18 @@ export class UserLicensingComponent implements OnInit {
   load() {
     this.loading.set(true); this.failed.set(false);
     const filter = {Id_Usuario: this.userId()};
-    forkJoin({accesses: this.all('application-access', filter), licenses: this.all('licenses', filter), applications: this.all('applications')})
+    forkJoin({accesses: this.all('application-access', filter), licenses: this.all('licenses', filter), applications: this.all('systems')})
       .pipe(finalize(() => this.loading.set(false))).subscribe({
         next: (data) => { this.accesses.set(data.accesses); this.licenses.set(data.licenses); this.applications.set(data.applications); },
         error: (e) => { this.failed.set(true); void this.alerts.error('No fue posible consultar licenciamiento', this.alerts.message(e)); },
       });
   }
   assignedApplications() {
-    const ids = new Set([...this.accesses(), ...this.licenses()].map(row => row['Id_Application']));
-    return [...ids].map(id => ({id, name: this.applications().find(app => app['Id_Application'] === id)?.['Name'] || 'Aplicación no disponible'}));
+    const ids = new Set([...this.accesses(), ...this.licenses()].map(row => row['Id_System']));
+    return [...ids].map(id => ({id, name: this.applications().find(app => app['Id_System'] === id)?.['Name'] || 'Sistema no disponible'}));
   }
-  access(app: string) { return this.accesses().find(a => a['Id_Application'] === app); }
-  appLicenses(app: string) { return this.licenses().filter(l => l['Id_Application'] === app); }
+  access(app: string) { return this.accesses().find(a => a['Id_System'] === app); }
+  appLicenses(app: string) { return this.licenses().filter(l => l['Id_System'] === app); }
   deviceCount(app: string) { return new Set(this.appLicenses(app).map(l => l['Id_Device']).filter(Boolean)).size; }
   status(value: string) { return ({ACTIVE:'Activa',INACTIVE:'Inactiva',SUSPENDED:'Suspendida',REVOKED:'Revocada',EXPIRED:'Vencida',PENDING:'Pendiente',ENROLLED:'Registrado'} as Record<string,string>)[value] || 'Sin información'; }
   open(resource: string, row: Record<string,any>) { this.editor.set({resource, row: {...row}}); }
@@ -55,7 +55,7 @@ export class UserLicensingComponent implements OnInit {
     const row = edit.row;
     if (row['Valid_Until'] && row['Valid_From'] > row['Valid_Until']) { void this.alerts.warning('Revisa la vigencia', 'Hasta debe ser posterior a Desde.'); return; }
     if (!(await this.alerts.confirm('¿Guardar cambios?', 'Se actualizará la vigencia y configuración del licenciamiento.')).isConfirmed) return;
-    const keys = edit.resource === 'licenses' ? ['Id_Usuario','Id_Application','Id_Device','Status','Valid_From','Valid_Until'] : ['Id_Usuario','Id_Application','Status','Valid_From','Valid_Until','Max_Devices'];
+    const keys = edit.resource === 'licenses' ? ['Id_Usuario','Id_System','Id_Device','Status','Valid_From','Valid_Until'] : ['Id_Usuario','Id_System','Status','Valid_From','Valid_Until','Max_Devices'];
     const body = Object.fromEntries(keys.map(key => [key, row[key] ?? null]));
     const id = edit.resource === 'licenses' ? row['Id_License'] : row['Id_Access'];
     this.saving.set(true);

@@ -203,7 +203,6 @@ export class LayoutComponent {
     {
       title: 'Licenciamiento',
       items: [
-        { label: 'Aplicaciones', path: '/aplicaciones', icon: 'android' },
         { label: 'Versiones', path: '/versiones', icon: 'package' },
         { label: 'Accesos', path: '/accesos', icon: 'access' },
         { label: 'Licencias', path: '/licencias', icon: 'license' },

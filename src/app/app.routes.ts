@@ -20,7 +20,7 @@ export const routes: Routes = [
 //     { path: 'permisos', component: DomainAdminComponent, data: { domain: 'permissions' } },
 //     { path: 'roles-permisos', component: RolePermissionsComponent },
     { path: 'atributos', component: DomainAdminComponent, data: { domain: 'attributes' } },
-    { path: 'aplicaciones', component: DomainAdminComponent, data: { domain: 'applications' } },
+    { path: 'aplicaciones', pathMatch: 'full', redirectTo: 'sistemas' }, // LEGACY TEMPORAL: enlaces anteriores.
     { path: 'versiones', component: VersionsComponent },
     { path: 'accesos', component: DomainAdminComponent, data: { domain: 'application-access' } },
     { path: 'licencias', component: DomainAdminComponent, data: { domain: 'licenses' } },

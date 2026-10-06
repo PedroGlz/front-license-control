@@ -10,7 +10,7 @@ import { AlertService } from '../core/alert.service';
   template: `<h1>Versiones APK</h1>
     <div class="toolbar">
       <div class="table-filters"><select [(ngModel)]="application" (ngModelChange)="page = 0; load()">
-        <option value="">Seleccione aplicación</option>
+        <option value="">Seleccione sistema</option>
         @for (a of applications(); track a.id) {
           <option [value]="a.id">{{ a.label }}</option>
         }</select
@@ -68,7 +68,7 @@ import { AlertService } from '../core/alert.service';
         <form #f="ngForm" (ngSubmit)="save()">
           <div class="dialog-heading"><h2>{{ edit()!['Id_Version'] ? 'Editar versión' : 'Subir versión APK' }}</h2><button type="button" class="icon-button close-button" title="Cerrar" aria-label="Cerrar formulario" (click)="edit.set(null)"><app-icon name="close" /></button></div>
           <div class="grid">
-            <label>Aplicación *<select [(ngModel)]="edit()!['Id_Application']" name="applicationId" [disabled]="!!edit()!['Id_Version']" required><option value="">Seleccione</option>@for (app of applications(); track app.id) { <option [value]="app.id">{{ app.label }}</option> }</select></label>
+            <label>Sistema *<select [(ngModel)]="edit()!['Id_System']" name="applicationId" [disabled]="!!edit()!['Id_Version']" required><option value="">Seleccione</option>@for (app of applications(); track app.id) { <option [value]="app.id">{{ app.label }}</option> }</select></label>
             <label>Versión *<input [(ngModel)]="edit()!['Version_Name']" name="versionName" required maxlength="80" /></label>
             @if (!edit()!['Id_Version']) { <label>Archivo APK *<input type="file" accept=".apk" (change)="choose($event)" required /></label> }
             <label>Android mínimo<input [(ngModel)]="edit()!['Minimum_Android']" name="minimumAndroid" maxlength="40" /></label>
@@ -107,12 +107,12 @@ export class VersionsComponent {
   }
   file: File | null = null;
   constructor() {
-    this.api.get<any[]>('/admin/lookups/applications').subscribe((x) => this.applications.set(x));
+    this.api.get<any[]>('/admin/lookups/licensed-systems').subscribe((x) => this.applications.set(x));
   }
   load() {
     if (this.application)
       this.api
-        .list(`applications/${this.application}/versions`, this.search, this.page, 25, {
+        .list(`systems/${this.application}/versions`, this.search, this.page, 25, {
           sort: this.order,
           direction: this.direction,
         })
@@ -120,14 +120,14 @@ export class VersionsComponent {
   }
   async remove(version: any) {
     if (!(await this.alerts.confirm('¿Eliminar versión?', 'La versión será desactivada; el archivo APK se conservará.')).isConfirmed) return;
-    this.api.delete(`/admin/applications/${this.application}/versions/${version.Id_Version}`).subscribe({
+    this.api.delete(`/admin/systems/${this.application}/versions/${version.Id_Version}`).subscribe({
       next: () => { this.edit.set(null); this.load(); void this.alerts.success('Versión desactivada'); },
       error: (e) => void this.alerts.error('No fue posible eliminar', this.alerts.message(e)),
     });
   }
   open(v?: any) {
     this.file = null; this.message.set('');
-    this.edit.set(v ? {...v} : {Id_Application:this.application, Version_Name:'', Minimum_Android:'', Release_Notes:'', Mandatory:false, Published:false});
+    this.edit.set(v ? {...v} : {Id_System:this.application, Version_Name:'', Minimum_Android:'', Release_Notes:'', Mandatory:false, Published:false});
   }
   choose(e: Event) {
     this.file = (e.target as HTMLInputElement).files?.[0] || null;
@@ -136,11 +136,11 @@ export class VersionsComponent {
     if (this.busy()) return;
     const v = this.edit();
     if (!v?.Version_Name?.trim()) { void this.alerts.warning('Validación', 'Debes indicar la versión.'); return; }
-    const application = v.Id_Application || this.application;
-    if (!application) { void this.alerts.warning('Validación', 'Seleccione una aplicación'); return; }
+    const application = v.Id_System || this.application;
+    if (!application) { void this.alerts.warning('Validación', 'Seleccione un sistema'); return; }
     let request;
     if (v.Id_Version)
-      request = this.api.put(`/admin/applications/${application}/versions/${v.Id_Version}`, {
+      request = this.api.put(`/admin/systems/${application}/versions/${v.Id_Version}`, {
         Version_Name: v.Version_Name,
         Minimum_Android: v.Minimum_Android,
         Release_Notes: v.Release_Notes,
@@ -159,7 +159,7 @@ export class VersionsComponent {
       body.append('published', String(!!v.Published));
       if (v.Minimum_Android) body.append('minimumAndroid', v.Minimum_Android);
       if (v.Release_Notes) body.append('releaseNotes', v.Release_Notes);
-      request = this.api.post(`/admin/applications/${application}/versions`, body);
+      request = this.api.post(`/admin/systems/${application}/versions`, body);
     }
     this.busy.set(true);
     request.subscribe({

@@ -90,23 +90,12 @@ const CONFIG: Record<string, { title: string; id: string; fields: Field[] }> = {
       { key: 'Status', label: 'Estatus', options: status },
     ],
   },
-  applications: {
-    title: 'Aplicaciones',
-    id: 'Id_Application',
-    fields: [
-      { key: 'Code', label: 'Código' },
-      { key: 'Name', label: 'Nombre' },
-      { key: 'Package_Name', label: 'Package name' },
-      { key: 'Licensing_Mode', label: 'Modalidad', options: ['USER_DEVICE', 'DEVICE_ONLY'] },
-      { key: 'Status', label: 'Estatus', options: status },
-    ],
-  },
   'application-access': {
-    title: 'Accesos a aplicaciones',
+    title: 'Accesos a sistemas',
     id: 'Id_Access',
     fields: [
       { key: 'Id_Usuario', label: 'Usuario', lookup: 'users' },
-      { key: 'Id_Application', label: 'Aplicación', lookup: 'applications' },
+      { key: 'Id_System', label: 'Sistema', lookup: 'licensed-systems' },
       { key: 'Status', label: 'Estatus', options: ['ACTIVE', 'SUSPENDED', 'REVOKED'] },
       { key: 'Valid_From', label: 'Desde', type: 'date' },
       { key: 'Valid_Until', label: 'Hasta', type: 'date' },
@@ -118,7 +107,7 @@ const CONFIG: Record<string, { title: string; id: string; fields: Field[] }> = {
     id: 'Id_License',
     fields: [
       { key: 'Id_Usuario', label: 'Usuario', lookup: 'users' },
-      { key: 'Id_Application', label: 'Aplicación', lookup: 'applications' },
+      { key: 'Id_System', label: 'Sistema', lookup: 'licensed-systems' },
       { key: 'Id_Device', label: 'Dispositivo', lookup: 'devices' },
       { key: 'Valid_From', label: 'Desde', type: 'date' },
       { key: 'Valid_Until', label: 'Hasta', type: 'date' },
@@ -146,10 +135,10 @@ const CONFIG: Record<string, { title: string; id: string; fields: Field[] }> = {
   },
 };
 
-const ADMINISTRATIVE = new Set(['user-types', 'systems', 'roles', 'permissions', 'attributes', 'applications']);
+const ADMINISTRATIVE = new Set(['user-types', 'systems', 'roles', 'permissions', 'attributes']);
 for (const [resource, config] of Object.entries(CONFIG)) {
   if (ADMINISTRATIVE.has(resource)) config.fields = config.fields.filter((field) =>
-    (field.key !== 'Status' || resource === 'applications') && !(resource === 'roles' && ['Code', 'Is_System_Admin'].includes(field.key)));
+    field.key !== 'Status' && !(resource === 'roles' && ['Code', 'Is_System_Admin'].includes(field.key)));
 }
 
 @Component({
@@ -164,7 +153,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
           placeholder="Buscar"
           [(ngModel)]="search"
           (keyup.enter)="page.set(0); load()"
-        />@if (!administrative() || resource === 'applications') {<select [(ngModel)]="filterStatus" (ngModelChange)="page.set(0); load()">
+        />@if (!administrative()) {<select [(ngModel)]="filterStatus" (ngModelChange)="page.set(0); load()">
           <option value="">Todos los estatus</option>
           @for (status of statusOptions(); track status) {
             <option>{{ status }}</option>
@@ -173,14 +162,14 @@ for (const [resource, config] of Object.entries(CONFIG)) {
         @if (hasSystem()) {
           <select [(ngModel)]="filterSystem" (ngModelChange)="page.set(0); load()">
             <option value="">Todos los sistemas</option>
-            @for (s of lookups['systems'] || []; track s.id) {
+            @for (s of (['licenses','application-access'].includes(resource) ? lookups['licensed-systems'] : lookups['systems']) || []; track s.id) {
               <option [value]="s.id">{{ s.label }}</option>
             }
           </select>
         }
         <button type="button" class="secondary" (click)="search = ''; filterStatus = ''; filterSystem = ''; page.set(0); load()">Limpiar</button></div>
       </div>
-      <button (click)="open()">{{ resource === 'applications' ? 'Nueva Aplicación' : resource === 'devices' ? 'Nuevo dispositivo' : 'Nuevo' }}</button>
+      <button (click)="open()">{{ resource === 'devices' ? 'Nuevo dispositivo' : 'Nuevo' }}</button>
     </div>
     <div class="panel">
       <table>
@@ -289,15 +278,19 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                     name="Description"
                     maxlength="500"
                 /></label>
-                @if (model()!['System_Type'] === 'ANDROID') {
-                  <label
-                    >Package name<input
-                      type="text"
-                      [(ngModel)]="model()!['Package_Name']"
-                      name="Package_Name"
-                      maxlength="255"
-                  /></label>
-                }
+                <section style="grid-column:1/-1">
+                  <h3>Licenciamiento opcional</h3>
+                  <div class="grid">
+                    <label>Modalidad<select [(ngModel)]="model()!['Licensing_Mode']" name="Licensing_Mode">
+                      <option [ngValue]="null">Sin licenciamiento</option>
+                      <option value="USER_DEVICE">Por usuario y dispositivo</option>
+                      <option value="DEVICE_ONLY">Por dispositivo</option>
+                    </select></label>
+                    @if (model()!['Licensing_Mode'] || model()!['System_Type'] === 'ANDROID') {
+                      <label>Package name<input [(ngModel)]="model()!['Package_Name']" name="Package_Name" maxlength="255" /></label>
+                    }
+                  </div>
+                </section>
                 
               }
               @case ('roles') {
@@ -476,12 +469,6 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                 
               }
 
-              @case ('applications') {
-                <label>Nombre *<input [(ngModel)]="model()!['Name']" name="Name" required maxlength="150" /></label>
-                <label>Package name *<input [(ngModel)]="model()!['Package_Name']" name="Package_Name" required maxlength="255" /></label>
-                <label>Modalidad *<select [(ngModel)]="model()!['Licensing_Mode']" name="Licensing_Mode" required><option value="">Seleccione</option><option>USER_DEVICE</option><option>DEVICE_ONLY</option></select></label>
-                <label>Estado *<select [(ngModel)]="model()!['Status']" name="Status" required><option value="ACTIVE">Activo</option><option value="INACTIVE">Inactivo</option></select></label>
-              }
               @case ('application-access') {
                 <label
                   >Usuario<select [(ngModel)]="model()!['Id_Usuario']" name="Id_Usuario" [disabled]="!!model()!['Id_Access']" required>
@@ -497,9 +484,9 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                   </select></label
                 >
                 <label
-                  >Aplicación<select [(ngModel)]="model()!['Id_Application']" name="Id_Application" [disabled]="!!model()!['Id_Access']" required>
+                  >Sistema<select [(ngModel)]="model()!['Id_System']" name="Id_System" [disabled]="!!model()!['Id_Access']" required>
                     <option [ngValue]="null">Seleccione</option>
-                    @for (o of lookups['applications'] || []; track o.id) {
+                    @for (o of lookups['licensed-systems'] || []; track o.id) {
                       <option [value]="o.id">{{ o.label }}</option>
                     }
                   </select></label
@@ -541,9 +528,9 @@ for (const [resource, config] of Object.entries(CONFIG)) {
               }
 
               @case ('licenses') {
-                <label>Aplicación *<select [(ngModel)]="model()!['Id_Application']" name="Id_Application" required>
+                <label>Sistema *<select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
                   <option [ngValue]="null">Seleccione</option>
-                  @for (o of lookups['applications'] || []; track o.id) { <option [value]="o.id">{{ o.label }}</option> }
+                  @for (o of lookups['licensed-systems'] || []; track o.id) { <option [value]="o.id">{{ o.label }}</option> }
                 </select></label>
                 <label>Dispositivo *<select [(ngModel)]="model()!['Id_Device']" name="Id_Device" required>
                   <option [ngValue]="null">Seleccione</option>
@@ -629,7 +616,7 @@ export class DomainAdminComponent {
       this.resource = d['domain'];
       this.cfg = CONFIG[this.resource];
       for (const f of this.cfg.fields)
-        if (f.lookup && !this.lookups[f.lookup])
+        if (f.lookup)
           this.api.get<any[]>(`/admin/lookups/${f.lookup}`).subscribe((x) => {
             this.lookups[f.lookup!] = x;
             this.changeDetector.markForCheck();
@@ -638,11 +625,10 @@ export class DomainAdminComponent {
     });
   }
   formTitle() {
-    if (this.resource === 'applications') return this.model()?.['Id_Application'] ? 'Editar Aplicación' : 'Nueva Aplicación';
     const titles: Record<string,string[]> = {'licenses':['Nueva licencia','Editar licencia'],'devices':['Nuevo dispositivo','Editar dispositivo'],'application-access':['Autorizar usuario','Editar acceso']};
     return titles[this.resource] ? titles[this.resource][this.model()?.[this.cfg.id] ? 1 : 0] : (this.model()?.[this.cfg.id] ? 'Editar ' : 'Nuevo ') + this.cfg.title;
   }
-  selectedApplication() { return this.lookups['applications']?.find(a => a.id === this.model()?.['Id_Application']); }
+  selectedApplication() { return this.lookups['licensed-systems']?.find(a => a.id === this.model()?.['Id_System']); }
   selectedDevice() { return this.lookups['devices']?.find(d => d.id === this.model()?.['Id_Device']); }
   statusLabel(value: string) { return ({ACTIVE:'Activo',INACTIVE:'Inactivo',PENDING:'Pendiente',ENROLLED:'Enrolado',SUSPENDED:'Suspendido',REVOKED:'Revocado',EXPIRED:'Vencido'} as Record<string,string>)[value] || value; }
   knownUser(id: string) {
@@ -695,7 +681,7 @@ export class DomainAdminComponent {
         { key: 'Last_Validation_At', label: 'Última validación' },
         { key: 'Status', label: 'Estatus' },
       ];
-    const fields = this.cfg.fields.filter((f) => f.key !== 'Status' && !(this.resource === 'applications' && f.key === 'Code')).slice(0, 5);
+    const fields = this.cfg.fields.filter((f) => f.key !== 'Status').slice(0, 5);
     return [...fields, ...this.cfg.fields.filter((f) => f.key === 'Status')];
   }
   required(f: Field) {
@@ -709,7 +695,6 @@ export class DomainAdminComponent {
         'Valid_From',
         'Max_Devices',
       ].includes(f.key) ||
-      (f.key === 'Package_Name' && this.resource === 'applications') ||
       (f.key === 'Valid_Until' && this.resource === 'licenses')
     );
   }
@@ -730,7 +715,7 @@ export class DomainAdminComponent {
         : {
             Status: this.resource === 'devices' ? 'PENDING' : 'ACTIVE',
             Valid_From: ['licenses','application-access'].includes(this.resource) ? new Date().toISOString().slice(0,10) : undefined,
-            Licensing_Mode: 'USER_DEVICE',
+            Licensing_Mode: this.resource === 'systems' ? null : 'USER_DEVICE',
             Max_Devices: 1,
             Sort_Order: 0,
             Is_Required: false,
@@ -753,11 +738,11 @@ export class DomainAdminComponent {
     delete m['Is_Active'];
     if (this.resource === 'licenses') {
       const app = this.selectedApplication();
-      if (!app) { void this.alerts.warning('Validación', 'Seleccione una aplicación disponible'); return; }
+      if (!app) { void this.alerts.warning('Validación', 'Seleccione un sistema con licenciamiento activo'); return; }
       if (app.Licensing_Mode === 'DEVICE_ONLY') m['Id_Usuario'] = null;
       else if (!m['Id_Usuario']) { void this.alerts.warning('Validación', 'Seleccione un usuario para USER_DEVICE'); return; }
     }
-    if (this.administrative() && this.resource !== 'applications') delete m['Status'];
+    if (this.administrative()) delete m['Status'];
     if (this.resource === 'roles') { delete m['Code']; delete m['Is_System_Admin']; }
     if (m['Valid_From'] && m['Valid_Until'] && m['Valid_From'] > m['Valid_Until']) {
       void this.alerts.warning('Validación', 'Hasta debe ser posterior a Desde');

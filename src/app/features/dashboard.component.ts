@@ -119,7 +119,7 @@ export class DashboardComponent {
   cards = [
     ['activeUsers', 'Usuarios activos'],
     ['activeSystems', 'Sistemas activos'],
-    ['applications', 'Aplicaciones'],
+    ['applications', 'Sistemas licenciados'],
     ['activeLicenses', 'Licencias activas'],
     ['devices', 'Dispositivos activos'],
     ['externalUsers', 'Externos'],

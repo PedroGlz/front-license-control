@@ -1,12 +1,12 @@
 <section class="user-card">
-  <div class="card-heading"><div><h2>Aplicaciones y licencias</h2><p>Accesos, vigencias y dispositivos del usuario, separados de sus roles.</p></div><a class="action-link secondary" routerLink="/accesos">Crear acceso</a></div>
+  <div class="card-heading"><div><h2>Sistemas y licencias</h2><p>Accesos, vigencias y dispositivos del usuario, separados de sus roles.</p></div><a class="action-link secondary" routerLink="/accesos">Crear acceso</a></div>
   @if (loading()) { <p role="status">Cargando licenciamiento…</p> }
   @else if (failed()) { <div class="empty"><p>No pudimos consultar las licencias.</p><button type="button" (click)="load()">Volver a intentar</button></div> }
   @else {
     @for (app of assignedApplications(); track app.id) {
       <article class="user-card" style="background:var(--surface-alt)"><h3>{{ app.name }}</h3>
         @if (access(app.id); as access) {
-          <dl><div><dt>Acceso a la aplicación</dt><dd><span class="badge" [class.inactive]="access['Status'] !== 'ACTIVE'">{{ status(access['Status']) }}</span></dd></div>
+          <dl><div><dt>Acceso al sistema</dt><dd><span class="badge" [class.inactive]="access['Status'] !== 'ACTIVE'">{{ status(access['Status']) }}</span></dd></div>
             <div><dt>Dispositivos permitidos</dt><dd>{{ access['Max_Devices'] }}</dd></div>
             <div><dt>Vigencia del acceso</dt><dd>{{ access['Valid_From'] | date:'dd/MM/yyyy' }} — {{ access['Valid_Until'] ? (access['Valid_Until'] | date:'dd/MM/yyyy') : 'Sin fecha límite' }}</dd></div>
             <div><dt>Dispositivos con licencia</dt><dd>{{ deviceCount(app.id) }} de {{ access['Max_Devices'] }}</dd></div></dl>
