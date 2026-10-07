@@ -1,3 +1,7 @@
+import { SelectModule } from 'primeng/select';
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 import { IconComponent } from '../core/icon.component';
 import { ChangeDetectorRef, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -8,7 +12,7 @@ import { ApiService } from '../core/api.service';
 import { AlertService } from '../core/alert.service';
 @Component({
   standalone: true,
-  imports: [IconComponent, FormsModule, UserSystemsComponent, UserSecurityComponent, UserLicensingComponent],
+  imports: [SelectModule, TableModule, ButtonModule, InputTextModule, IconComponent, FormsModule, UserSystemsComponent, UserSecurityComponent, UserLicensingComponent],
   templateUrl: './users.component.html',
   styleUrls: ['./forms.scss', './user-detail.scss', './users.component.scss'],
 })

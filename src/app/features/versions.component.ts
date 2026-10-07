@@ -1,3 +1,9 @@
+import { SelectModule } from 'primeng/select';
+import { TableModule } from 'primeng/table';
+import { DialogModule } from 'primeng/dialog';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
 import { IconComponent } from '../core/icon.component';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -5,28 +11,21 @@ import { ApiService } from '../core/api.service';
 import { AlertService } from '../core/alert.service';
 @Component({
   standalone: true,
-  imports: [IconComponent, FormsModule],
+  imports: [SelectModule, TableModule, DialogModule, ButtonModule, InputTextModule, TextareaModule, IconComponent, FormsModule],
   styleUrls: ['./forms.scss'],
-  template: `<h1>Versiones APK</h1>
-    <div class="toolbar">
-      <div class="table-filters"><select [(ngModel)]="application" (ngModelChange)="page = 0; load()">
-        <option value="">Seleccione sistema</option>
-        @for (a of applications(); track a.id) {
-          <option [value]="a.id">{{ a.label }}</option>
-        }</select
-      ><input
-        placeholder="Buscar versión o archivo"
-        [(ngModel)]="search"
-        (keyup.enter)="page = 0; load()"
-      /><button type="button" class="secondary" (click)="search = ''; application = ''; page = 0; rows.set([])">Limpiar</button></div><button
+  template: `
+    <div class="page-heading tw:flex tw:flex-wrap tw:items-end tw:justify-between tw:gap-4"><h1>Versiones APK</h1><button pButton
         (click)="open()"
       >
         Subir APK
-      </button>
-    </div>
-    <div class="panel">
-      <table>
-        <thead>
+      </button></div>
+    <div class="panel"><div class="table-tools"><div class="table-filters"><p-select [(ngModel)]="application" (ngModelChange)="page = 0; load()" [options]="[{id: '', label: 'Seleccione sistema'}].concat(applications())" optionLabel="label" optionValue="id" ariaLabel="Sistema" /><input pInputText
+        placeholder="Buscar versión o archivo"
+        [(ngModel)]="search"
+        (keyup.enter)="page = 0; load()"
+      /><button pButton type="button" class="secondary" (click)="search = ''; application = ''; page = 0; rows.set([])">Limpiar</button></div></div>
+      <p-table [value]="rows()" styleClass="etic-table" [scrollable]="true">
+        <ng-template #header>
           <tr>
             <th (click)="sortBy('Version_Name')">Versión</th>
             <th>Archivo</th>
@@ -36,55 +35,54 @@ import { AlertService } from '../core/alert.service';
             <th>Estatus</th>
             <th>Acciones</th>
           </tr>
-        </thead>
-        <tbody>
-          @for (v of rows(); track v['Id_Version']) {
+        </ng-template>
+        <ng-template #body let-v>
+          
             <tr>
               <td>{{ v['Version_Name'] }}</td>
               <td>{{ v['Original_File_Name'] }}</td>
               <td>{{ v['File_Size'] }}</td>
-              <td>{{ v['Sha256'] }}</td>
+              <td><span class="hash-cell" [title]="v['Sha256']">{{ v['Sha256'] }}</span></td>
               <td>{{ v['Created_At'] }}</td>
               <td>
                 <span class="badge" [class.inactive]="!v['Published']">{{
                   v['Published'] ? 'PUBLICADA' : 'NO PUBLICADA'
                 }}</span>
               </td>
-              <td><button type="button" class="icon-button" title="Ver / Editar" aria-label="Ver / Editar" (click)="open(v)"><app-icon name="edit" /></button><button type="button" class="icon-button danger" title="Desactivar" aria-label="Desactivar" (click)="remove(v)"><app-icon name="trash" /></button></td>
+              <td><button pButton type="button" class="icon-button" title="Ver / Editar" aria-label="Ver / Editar" (click)="open(v)"><app-icon name="edit" /></button><button pButton type="button" class="icon-button danger" title="Desactivar" aria-label="Desactivar" (click)="remove(v)"><app-icon name="trash" /></button></td>
             </tr>
-          }
-        </tbody>
-      </table>
+          </ng-template>
+      </p-table>
       <footer>
-        <button [disabled]="page === 0" (click)="page = page - 1; load()">Anterior</button
+        <button pButton [disabled]="page === 0" (click)="page = page - 1; load()">Anterior</button
         ><span>Página {{ page + 1 }}</span
-        ><button [disabled]="rows().length < 25" (click)="page = page + 1; load()">
+        ><button pButton [disabled]="rows().length < 25" (click)="page = page + 1; load()">
           Siguiente
         </button>
       </footer>
     </div>
     @if (edit()) {
-      <div class="modal">
+      <p-dialog [visible]="true" [modal]="true" [draggable]="false" [closable]="false" [showHeader]="false" styleClass="etic-dialog" [style]="{width: 'min(92vw, 820px)'}">
         <form #f="ngForm" (ngSubmit)="save()">
-          <div class="dialog-heading"><h2>{{ edit()!['Id_Version'] ? 'Editar versión' : 'Subir versión APK' }}</h2><button type="button" class="icon-button close-button" title="Cerrar" aria-label="Cerrar formulario" (click)="edit.set(null)"><app-icon name="close" /></button></div>
-          <div class="grid">
+          <div class="dialog-heading"><h2>{{ edit()!['Id_Version'] ? 'Editar versión' : 'Subir versión APK' }}</h2><button pButton type="button" class="icon-button close-button" title="Cerrar" aria-label="Cerrar formulario" (click)="edit.set(null)"><app-icon name="close" /></button></div>
+          <div class="grid tw:grid tw:grid-cols-1 tw:md:grid-cols-2">
             <label>Sistema *<select [(ngModel)]="edit()!['Id_System']" name="applicationId" [disabled]="!!edit()!['Id_Version']" required><option value="">Seleccione</option>@for (app of applications(); track app.id) { <option [value]="app.id">{{ app.label }}</option> }</select></label>
-            <label>Versión *<input [(ngModel)]="edit()!['Version_Name']" name="versionName" required maxlength="80" /></label>
+            <label>Versión *<input pInputText [(ngModel)]="edit()!['Version_Name']" name="versionName" required maxlength="80" /></label>
             @if (!edit()!['Id_Version']) { <label>Archivo APK *<input type="file" accept=".apk" (change)="choose($event)" required /></label> }
-            <label>Android mínimo<input [(ngModel)]="edit()!['Minimum_Android']" name="minimumAndroid" maxlength="40" /></label>
-            <label>Notas de versión<textarea [(ngModel)]="edit()!['Release_Notes']" name="releaseNotes" rows="3"></textarea></label>
+            <label>Android mínimo<input pInputText [(ngModel)]="edit()!['Minimum_Android']" name="minimumAndroid" maxlength="40" /></label>
+            <label>Notas de versión<textarea pTextarea [(ngModel)]="edit()!['Release_Notes']" name="releaseNotes" rows="3"></textarea></label>
             <label class="check"><input type="checkbox" [(ngModel)]="edit()!['Mandatory']" name="mandatory" />Actualización obligatoria</label>
             <label class="check"><input type="checkbox" [(ngModel)]="edit()!['Published']" name="published" />{{ edit()!['Id_Version'] ? 'Publicada' : 'Publicar al subir' }}</label>
           </div>
           <p>{{ message() }}</p>
           <div class="actions">
-            <button type="button" class="secondary" (click)="edit.set(null)">Cancelar</button
-            ><button [disabled]="f.invalid || busy()">
+            <button pButton type="button" class="secondary" (click)="edit.set(null)">Cancelar</button
+            ><button pButton [disabled]="f.invalid || busy()">
               Guardar
             </button>
           </div>
         </form>
-      </div>
+      </p-dialog>
     }`,
 })
 export class VersionsComponent {

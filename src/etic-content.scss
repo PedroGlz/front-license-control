@@ -1,0 +1,102 @@
+// ETIC Online: module-table-shell, licensing-page y overrides globales.
+// Ámbito de contenido: no afecta al sidebar ni al header de navegación.
+.shell > section > main {
+  padding: 2rem;
+  min-width: 0;
+  --surface-hover: #edf7fa;
+  --etic-heading: #132f48;
+  --etic-table-head: #eaf3f7;
+  --etic-table-text: #173a52;
+  --etic-table-border: #d5e2e9;
+  --etic-card-border: #e1e8ef;
+  --etic-shadow: 0 8px 30px rgba(30, 55, 80, .05);
+  --etic-contrast: #fff;
+
+  h1 { margin: .2rem 0 .35rem; font-size: 2rem; color: var(--etic-heading); }
+  .page-heading { margin-bottom: 1.5rem; }
+  .table-tools { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
+  .table-tools .table-filters { margin-top: 0; }
+  .toolbar { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem; }
+  .toolbar > div { min-width: 0; flex: 1; }
+  .table-filters { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; margin-top: 1rem; min-width: 0; }
+  .table-filters > input { flex: 1 1 12rem; width: auto; }
+  .table-filters > p-select { min-width: 9rem; max-width: 100%; }
+  .table-filters .p-select { width: 100%; min-height: 2.6rem; background: var(--surface); border-color: var(--input-border); border-radius: .55rem; }
+  .table-filters .p-select-label { padding: .65rem .8rem; color: var(--text); }
+  .table-filters > select { flex: 0 1 auto; min-width: 9rem; }
+  .table-filters input, .table-filters select, .table-filters button { min-height: 2.6rem; margin: 0; }
+  .panel, .user-card { background: var(--surface); border: 1px solid var(--etic-card-border); box-shadow: var(--etic-shadow); border-radius: 0; }
+  .panel { overflow: auto; }
+  .user-card { padding: 1.5rem; margin-block: 1rem; }
+  .user-grid, .card-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.25rem; }
+  form.user-card { display: grid; gap: 1rem 1.25rem; }
+  label { color: var(--text); font-size: .85rem; font-weight: 650; min-width: 0; }
+  form label, .user-grid label { display: grid; gap: .4rem; }
+  input:not([type=checkbox]):not([type=radio]), select, textarea {
+    min-width: 0; max-width: 100%; border: 1px solid var(--input-border);
+    border-radius: .55rem; padding: .65rem .8rem; background: var(--surface); color: var(--text);
+  }
+  form input:not([type=checkbox]):not([type=radio]), form select, form textarea, .user-grid input:not([type=checkbox]), .user-grid select { width: 100%; }
+  input:not([type=checkbox]):not([type=radio]), select { min-height: 2.75rem; }
+  textarea { resize: vertical; }
+  input[type=checkbox] { width: 1.125rem; min-height: 0; accent-color: var(--primary); }
+  select[multiple] { min-height: 8rem; }
+  input[readonly], input:disabled, select:disabled, textarea:disabled { background: var(--surface-alt); color: var(--text-secondary); }
+  .ng-invalid.ng-touched:not(form) { border-color: var(--danger); }
+  button.p-button, .action-link {
+    border: 1px solid var(--primary); border-radius: var(--p-button-border-radius);
+    background: var(--primary); color: var(--etic-contrast); padding: .5rem 1rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    font-weight: 600; cursor: pointer; text-decoration: none;
+  }
+  button.p-button:not(:disabled):hover, .action-link:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+  button.secondary, .action-link.secondary { background: transparent; color: var(--text-secondary); border-color: var(--input-border); }
+  button.secondary:not(:disabled):hover, .action-link.secondary:hover { background: var(--surface-hover); color: var(--text); border-color: var(--input-border); }
+  button.link, button.icon-button, button.danger { background: transparent; color: var(--primary); border-color: transparent; }
+  button.icon-button { width: 2.25rem; height: 2.25rem; padding: .5rem; border-radius: 50%; vertical-align: middle; }
+  button.link:not(:disabled):hover, button.icon-button:not(:disabled):hover { background: var(--primary-soft); border-color: transparent; }
+  button.danger { color: var(--danger); }
+  button.danger:not(:disabled):hover { background: color-mix(in srgb, var(--danger) 12%, var(--surface)); border-color: transparent; }
+  .user-tabs button { background: transparent; border-color: transparent; color: var(--text-secondary); }
+  .user-tabs button.selected { color: var(--primary); background: var(--primary-soft); }
+  footer, .actions, .user-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .65rem; }
+  .panel > footer { padding: 1rem 1.25rem; font-size: .85rem; color: var(--text-secondary); }
+  form footer, form .actions, form .user-actions { border-top: 1px solid var(--border); margin-top: .25rem; padding-top: 1rem; }
+  .etic-table table, table { width: 100%; border-collapse: collapse; table-layout: auto; }
+  .etic-table th, th { background: var(--etic-table-head); color: var(--etic-table-text); border-bottom: 1px solid var(--etic-table-border); padding: .8rem 1rem; font-size: .76rem; font-weight: 700; letter-spacing: .025em; text-align: left; white-space: nowrap; }
+  .etic-table td, td { background: transparent; color: var(--text); border-bottom: 1px solid var(--border); padding: .8rem 1rem; vertical-align: middle; }
+  .etic-table tr { background: var(--surface); }
+  .etic-table tbody tr:nth-child(even), tbody tr:nth-child(even) { background: var(--surface-alt); }
+  .etic-table tbody tr:hover, tbody tr:hover { background: var(--surface-hover); }
+  td:last-child:has(button.icon-button) { white-space: nowrap; width: 110px; text-align: center; }
+  .empty { padding: 3rem 1rem; text-align: center; color: var(--text-secondary); }
+  .etic-dialog { background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: 0 24px 65px rgba(22, 52, 76, .2); }
+  .etic-dialog .p-dialog-content { padding: 1.5rem; max-height: min(72dvh, 680px); overflow-y: auto; }
+  .etic-dialog form { background: transparent; border: 0; padding: 0; }
+  .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+  .dialog-heading h2 { margin: 0; color: var(--etic-heading); }
+  .hash-cell { display: block; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: monospace; font-size: .8rem; }
+}
+html.app-dark .shell > section > main {
+  --etic-heading: #e5eef6;
+  --etic-table-head: #1d2c3d;
+  --etic-table-text: #e4edf5;
+  --etic-table-border: #304456;
+  --etic-card-border: #2a3b4c;
+  --etic-shadow: 0 8px 30px rgba(0, 0, 0, .2);
+  --surface-hover: #203449;
+  --etic-contrast: #172331;
+  .etic-table td { border-color: #243546; }
+  input::placeholder, textarea::placeholder { color: #8fa6b8; }
+}
+@media (max-width: 900px) { .shell > section > main { padding: 1rem; } }
+@media (max-width: 650px) {
+  .shell > section > main {
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .table-filters { flex-direction: column; align-items: stretch; }
+    .table-filters > input, .table-filters > select { flex: auto; width: 100%; }
+    .user-grid, .card-list { grid-template-columns: 1fr; }
+    .user-card, .etic-dialog .p-dialog-content { padding: 1rem; }
+    form footer button, form .actions button { flex: 1; }
+  }
+}

@@ -1,3 +1,5 @@
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 import { IconComponent } from '../core/icon.component';
 import { generatedCode } from '../core/generated-code';
 import { Component, input, inject, signal, OnInit } from '@angular/core';
@@ -7,23 +9,23 @@ import { AlertService } from '../core/alert.service';
 @Component({
   standalone: true,
   selector: 'app-attribute-options',
-  imports: [FormsModule, IconComponent],
+  imports: [ButtonModule, InputTextModule, FormsModule, IconComponent],
   styleUrls: ['./forms.scss'],
   template: `<h3>Opciones del catálogo</h3>
     @for (o of options(); track o['Id_Option']) {
       <div class="grid">
-        <label>Código<input [ngModel]="o['Value_Code']" readonly [ngModelOptions]="{standalone: true}" maxlength="100" /></label
-        ><label>Nombre<input [(ngModel)]="o['Display_Name']" [ngModelOptions]="{standalone: true}" maxlength="150" /></label
-        ><label>Orden<input type="number" [(ngModel)]="o['Sort_Order']" [ngModelOptions]="{standalone: true}" /></label
+        <label>Código<input pInputText [ngModel]="o['Value_Code']" readonly [ngModelOptions]="{standalone: true}" maxlength="100" /></label
+        ><label>Nombre<input pInputText [(ngModel)]="o['Display_Name']" [ngModelOptions]="{standalone: true}" maxlength="150" /></label
+        ><label>Orden<input pInputText type="number" [(ngModel)]="o['Sort_Order']" [ngModelOptions]="{standalone: true}" /></label
         >
       </div>
-      <div class="option-actions"><button type="button" class="icon-button" title="Guardar opción" aria-label="Guardar opción" (click)="save(o)"><app-icon name="save" /></button><button type="button" class="icon-button danger" title="Desactivar opción" aria-label="Desactivar opción" (click)="remove(o)"><app-icon name="trash" /></button></div>
+      <div class="option-actions"><button pButton type="button" class="icon-button" title="Guardar opción" aria-label="Guardar opción" (click)="save(o)"><app-icon name="save" /></button><button pButton type="button" class="icon-button danger" title="Desactivar opción" aria-label="Desactivar opción" (click)="remove(o)"><app-icon name="trash" /></button></div>
     }
     <div class="grid" style="margin-top:20px">
-      <label>Código<input [ngModel]="code(newOption.Display_Name, 100)" readonly [ngModelOptions]="{standalone: true}" maxlength="100" /></label
-      ><label>Nombre<input [(ngModel)]="newOption.Display_Name" [ngModelOptions]="{standalone: true}" maxlength="150" /></label>
+      <label>Código<input pInputText [ngModel]="code(newOption.Display_Name, 100)" readonly [ngModelOptions]="{standalone: true}" maxlength="100" /></label
+      ><label>Nombre<input pInputText [(ngModel)]="newOption.Display_Name" [ngModelOptions]="{standalone: true}" maxlength="150" /></label>
     </div>
-    <div class="option-actions"><button type="button" [disabled]="!code(newOption.Display_Name, 100)" (click)="add()">Agregar opción</button><button type="button" class="secondary" (click)="newOption = { Value_Code: '', Display_Name: '', Sort_Order: 0 }">Cancelar</button></div>
+    <div class="option-actions"><button pButton type="button" [disabled]="!code(newOption.Display_Name, 100)" (click)="add()">Agregar opción</button><button pButton type="button" class="secondary" (click)="newOption = { Value_Code: '', Display_Name: '', Sort_Order: 0 }">Cancelar</button></div>
     <p>{{ message() }}</p>`,
 })
 export class AttributeOptionsComponent implements OnInit {

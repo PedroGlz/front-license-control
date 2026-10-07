@@ -125,9 +125,9 @@ export class AuditComponent {
       label: 'Licenciamiento',
       columns: [
         { key: 'Event_Type', label: 'Evento' },
-        { key: 'Result', label: 'Resultado' },
-        { key: 'Reason', label: 'Motivo' },
-        { key: 'Id_Usuario', label: 'Usuario' },
+        { key: 'Success', label: 'Correcto' },
+        { key: 'Failure_Code', label: 'Motivo' },
+        { key: 'Id_License', label: 'Licencia' },
         { key: 'Created_At', label: 'Fecha' },
       ],
     },

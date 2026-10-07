@@ -1,41 +1,15 @@
 <section class="user-card">
-  <div class="card-heading"><div><h2>Sistemas y licencias</h2><p>Asignaciones, vigencias y dispositivos del usuario, separados de sus roles.</p></div><a class="action-link secondary" routerLink="/accesos">Crear asignación de licencia</a></div>
-  @if (loading()) { <p role="status">Cargando licenciamiento…</p> }
-  @else if (failed()) { <div class="empty"><p>No pudimos consultar las licencias.</p><button type="button" (click)="load()">Volver a intentar</button></div> }
-  @else {
-    @for (app of assignedApplications(); track app.id) {
-      <article class="user-card" style="background:var(--surface-alt)"><h3>{{ app.name }}</h3>
-        @if (access(app.id); as access) {
-          <dl><div><dt>Asignación de licencia</dt><dd><span class="badge" [class.inactive]="access['Status'] !== 'ACTIVE'">{{ status(access['Status']) }}</span></dd></div>
-            <div><dt>Dispositivos permitidos</dt><dd>{{ access['Max_Devices'] }}</dd></div>
-            <div><dt>Vigencia de la asignación</dt><dd>{{ access['Valid_From'] | date:'dd/MM/yyyy' }} — {{ access['Valid_Until'] ? (access['Valid_Until'] | date:'dd/MM/yyyy') : 'Sin fecha límite' }}</dd></div>
-            <div><dt>Dispositivos con licencia</dt><dd>{{ deviceCount(app.id) }} de {{ access['Max_Devices'] }}</dd></div></dl>
-          <button type="button" class="secondary" (click)="open('application-access', access)">Editar asignación</button>
-        }
-        @for (license of appLicenses(app.id); track license['Id_License']) {
-          <div style="margin-top:20px"><div class="card-heading"><h4>Licencia</h4><span class="badge" [class.inactive]="license['Status'] !== 'ACTIVE'">{{ status(license['Status']) }}</span></div>
-            <p>Vigencia: {{ license['Valid_From'] | date:'dd/MM/yyyy' }} — {{ license['Valid_Until'] | date:'dd/MM/yyyy' }}</p><button type="button" class="secondary" (click)="open('licenses', license)">Editar licencia</button></div>
-        } @empty { <div class="empty" style="margin-top:16px"><p>No hay licencias asignadas a esta aplicación.</p><a class="action-link secondary" routerLink="/licencias">Administrar licencias</a></div> }
-        <div class="user-actions"><button type="button" class="secondary" (click)="showDevices(app.id)">Ver dispositivos</button></div>
-        @if (deviceApplication() === app.id) {
-          <h4>Dispositivos vinculados</h4>
-          @if (devicesLoading()) { <p role="status">Cargando dispositivos…</p> }
-          @else { <div class="card-list">@for (device of devices(); track device['Id_Device']) {
-            <div><strong>{{ device['Display_Name'] || 'Dispositivo sin nombre' }}</strong><p>{{ device['Manufacturer'] }} {{ device['Model'] }}</p><span class="badge" [class.inactive]="device['Status'] !== 'ACTIVE'">{{ status(device['Status']) }}</span></div>
-          } @empty { <p>No hay dispositivos vinculados a las licencias de esta aplicación.</p> }</div> }
-          <div class="user-actions"><button type="button" class="secondary" (click)="deviceApplication.set('')">Cerrar dispositivos</button></div>
-        }
-      </article>
-    } @empty { <div class="empty"><h3>No hay licencias asignadas</h3><p>Cuando el usuario tenga acceso a una aplicación licenciada, aparecerá aquí.</p><a class="action-link" routerLink="/accesos">Crear asignación de licencia</a></div> }
+  <div class="card-heading"><div><h2>Licencias del usuario</h2><p>Licencias USER_DEVICE independientes de sus roles y accesos web.</p></div><a class="action-link" routerLink="/licencias" [queryParams]="{user:userId()}">Administrar licencias</a></div>
+  @if(loading()){<p role="status">Cargando licencias…</p>}
+  @else{
+    @for(l of licenses();track l['Id_License']){
+      <article class="user-card"><h3>{{l['System_Name']}}</h3><p>{{l['Term_Type']}} · {{l['Effective_Status']}}</p>
+      <p>Dispositivos: {{l['Used_Seats']}} de {{l['Seat_Count']}} · Disponibles: {{l['Available_Seats']}}</p>
+      <p>Activación: {{l['Activated_At']|date:'dd/MM/yyyy'}} · Vencimiento: {{l['Expires_At']?(l['Expires_At']|date:'dd/MM/yyyy'):'Sin vencimiento comercial'}}</p>
+      <button pButton class="secondary" (click)="show(l)">Ver dispositivos</button></article>
+    }@empty{<div class="empty"><p>No hay licencias para este usuario.</p><a class="action-link" routerLink="/licencias" [queryParams]="{user:userId()}">Crear licencia</a></div>}
   }
 </section>
-@if (editor(); as edit) {
-  <section class="user-card"><h3>{{ edit.resource === 'licenses' ? 'Editar licencia' : 'Editar asignación de licencia' }}</h3><p>La aplicación, el usuario y el dispositivo se conservan.</p>
-    <form #licenseForm="ngForm" (ngSubmit)="save()"><div class="user-grid">
-      <label>Desde<input type="date" [(ngModel)]="edit.row['Valid_From']" name="Valid_From" required /></label>
-      <label>Hasta<input type="date" [(ngModel)]="edit.row['Valid_Until']" name="Valid_Until" [required]="edit.resource === 'licenses'" [min]="edit.row['Valid_From']" /></label>
-      <label>Estado<select [(ngModel)]="edit.row['Status']" name="Status" required><option value="ACTIVE">Activa</option><option value="SUSPENDED">Suspendida</option><option value="REVOKED">Revocada</option>@if (edit.resource === 'licenses') { <option value="EXPIRED">Vencida</option> }</select></label>
-      @if (edit.resource === 'application-access') { <label>Dispositivos permitidos<input type="number" [(ngModel)]="edit.row['Max_Devices']" name="Max_Devices" required min="1" step="1" /></label> }
-    </div><div class="user-actions"><button type="button" class="secondary" [disabled]="saving()" (click)="editor.set(null)">Cancelar</button><button [disabled]="licenseForm.invalid || saving()">Guardar cambios</button></div></form>
-  </section>
-}
+@if(detail();as d){<section class="user-card"><h3>Dispositivos de {{d['System_Name']}}</h3>
+@for(device of d['devices'];track device['Id_License_Device']){<p>{{device['Display_Name']||'Dispositivo sin nombre'}} · {{device['Manufacturer']}} {{device['Model']}} · {{device['License_Status']}}</p>}@empty{<p>No hay dispositivos vinculados.</p>}
+<button pButton class="secondary" (click)="detail.set(null)">Cerrar</button></section>}

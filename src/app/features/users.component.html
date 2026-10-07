@@ -1,23 +1,12 @@
 @if (!model()) {
-<div class="toolbar">
-      <div>
-        <h1>Usuarios</h1>
-        <div class="table-filters"><input
+<div class="page-heading tw:flex tw:flex-wrap tw:items-end tw:justify-between tw:gap-4"><h1>Usuarios</h1><button pButton (click)="edit()">Nuevo usuario</button></div>
+    <div class="panel"><div class="table-tools"><div class="table-filters"><input pInputText
           placeholder="Usuario, nombre o email"
           [(ngModel)]="search"
           (keyup.enter)="page.set(0); load()"
-        /><select [(ngModel)]="filterType" (ngModelChange)="page.set(0); load()">
-          <option value="">Todos los tipos</option>
-          @for (t of types; track t.id) {
-            <option [value]="t.id">{{ labelName(t.label) }}</option>
-          }</select
-        ><button type="button" class="secondary" (click)="search = ''; filterType = ''; page.set(0); load()">Limpiar</button></div>
-      </div>
-      <button (click)="edit()">Nuevo usuario</button>
-    </div>
-    <div class="panel">
-      <table>
-        <thead>
+        /><p-select [(ngModel)]="filterType" (ngModelChange)="page.set(0); load()" [options]="[{id: '', label: 'Todos los tipos'}].concat(types)" optionValue="id" optionLabel="label" ariaLabel="Tipo de usuario"><ng-template #item let-type>{{ labelName(type.label) }}</ng-template><ng-template #selectedItem let-type>{{ labelName(type.label) }}</ng-template></p-select><button pButton type="button" class="secondary" (click)="search = ''; filterType = ''; page.set(0); load()">Limpiar</button></div></div>
+      <p-table [value]="users()" styleClass="etic-table" [scrollable]="true">
+        <ng-template #header>
           <tr>
             <th (click)="sortBy('Username')">Usuario</th>
             <th (click)="sortBy('First_Name')">Nombre</th>
@@ -25,30 +14,29 @@
             <th>Tipo</th>
             <th></th>
           </tr>
-        </thead>
-        <tbody>
-          @for (u of users(); track u['Id_User']) {
+        </ng-template>
+        <ng-template #body let-u>
+          
             <tr>
               <td>{{ u['Username'] }}</td>
               <td>{{ u['First_Name'] }} {{ u['Last_Name'] }}</td>
               <td>{{ u['Email'] }}</td>
               <td>{{ typeName(u['Id_User_Type']) }}</td>
-              <td><button type="button" class="icon-button" title="Ver / Editar" aria-label="Ver / Editar" (click)="edit(u)"><app-icon name="edit" /></button><button type="button" class="icon-button danger" title="Desactivar" aria-label="Desactivar" (click)="remove(u)"><app-icon name="trash" /></button></td>
+              <td><button pButton type="button" class="icon-button" title="Ver / Editar" aria-label="Ver / Editar" (click)="edit(u)"><app-icon name="edit" /></button><button pButton type="button" class="icon-button danger" title="Desactivar" aria-label="Desactivar" (click)="remove(u)"><app-icon name="trash" /></button></td>
             </tr>
-          }
-        </tbody>
-      </table>
+          </ng-template>
+      </p-table>
       <footer>
-        <button [disabled]="page() === 0" (click)="page.set(page() - 1); load()">Anterior</button
+        <button pButton [disabled]="page() === 0" (click)="page.set(page() - 1); load()">Anterior</button
         ><span>Página {{ page() + 1 }}</span
-        ><button [disabled]="users().length < 25" (click)="page.set(page() + 1); load()">
+        ><button pButton [disabled]="users().length < 25" (click)="page.set(page() + 1); load()">
           Siguiente
         </button>
       </footer>
     </div>
 
 } @else {
-  <div class="detail-top"><button type="button" class="link" (click)="model.set(null)">← Volver a usuarios</button><span class="muted">{{ model()!['Id_User'] ? 'Detalle del usuario' : 'Alta de usuario' }}</span></div>
+  <div class="detail-top"><button pButton type="button" class="link" (click)="model.set(null)">← Volver a usuarios</button><span class="muted">{{ model()!['Id_User'] ? 'Detalle del usuario' : 'Alta de usuario' }}</span></div>
   <section class="user-card user-heading">
     <div class="identity"><div class="avatar" aria-hidden="true">{{ (model()!['First_Name'] || '?').slice(0,1).toUpperCase() }}</div>
       <div><h1>{{ fullName() || 'Nuevo usuario' }}</h1><p>{{ model()!['Username'] || 'Completa los datos para crear el usuario' }}</p>
@@ -56,12 +44,12 @@
       </div>
     </div>
     @if (model()!['Id_User']) {
-      <div class="header-actions"><button type="button" class="secondary" (click)="tab.set('general'); editing.set(true)">Editar</button><button type="button" class="secondary" (click)="tab.set('security')">Cambiar contraseña</button><button type="button" class="danger" (click)="remove(model()!)">Desactivar</button></div>
+      <div class="header-actions"><button pButton type="button" class="secondary" (click)="tab.set('general'); editing.set(true)">Editar</button><button pButton type="button" class="secondary" (click)="tab.set('security')">Cambiar contraseña</button><button pButton type="button" class="danger" (click)="remove(model()!)">Desactivar</button></div>
     }
   </section>
   @if (model()!['Id_User']) {
     <nav class="user-tabs" aria-label="Secciones del usuario">
-      @for (item of tabs; track item.key) { <button type="button" [class.selected]="tab() === item.key" [attr.aria-current]="tab() === item.key ? 'page' : null" (click)="tab.set(item.key)">{{ item.label }}</button> }
+      @for (item of tabs; track item.key) { <button pButton type="button" [class.selected]="tab() === item.key" [attr.aria-current]="tab() === item.key ? 'page' : null" (click)="tab.set(item.key)">{{ item.label }}</button> }
     </nav>
   }
   @if (tab() === 'general' || !model()!['Id_User']) {
@@ -72,24 +60,24 @@
             @for (f of visibleFields(); track f.key) {
               <label>{{ f.label }}{{ f.required ? ' *' : '' }}
               @if (f.key === 'Id_User_Type') { <select [(ngModel)]="model()![f.key]" [name]="f.key" required><option value="">Seleccione un tipo</option>@for (t of types; track t.id) { <option [value]="t.id">{{ labelName(t.label) }}</option> }</select> }
-              @else { <input [type]="f.type || 'text'" [(ngModel)]="model()![f.key]" [name]="f.key" [required]="f.required || false" [maxlength]="f.max || 254" /> }
+              @else { <input pInputText [type]="f.type || 'text'" [(ngModel)]="model()![f.key]" [name]="f.key" [required]="f.required || false" [maxlength]="f.max || 254" /> }
               </label>
             }
           </div>
         </section>
         @if (!model()!['Id_User']) {
           <section class="user-card"><h2>Contraseña inicial</h2><p>Define una contraseña para el primer inicio de sesión.</p><div class="user-grid">
-            <label>Nueva contraseña<input [type]="showInitialPassword ? 'text' : 'password'" [(ngModel)]="model()!['Password']" name="Password" required minlength="8" maxlength="72" autocomplete="new-password" /></label>
-            <label>Confirmar contraseña<input [type]="showInitialPassword ? 'text' : 'password'" [(ngModel)]="initialConfirmation" name="initialConfirmation" required maxlength="72" autocomplete="new-password" /></label>
-          </div><button type="button" class="secondary" style="margin-top:12px" (click)="showInitialPassword = !showInitialPassword" [attr.aria-pressed]="showInitialPassword">{{ showInitialPassword ? 'Ocultar contraseñas' : 'Mostrar contraseñas' }}</button>
+            <label>Nueva contraseña<input pInputText [type]="showInitialPassword ? 'text' : 'password'" [(ngModel)]="model()!['Password']" name="Password" required minlength="8" maxlength="72" autocomplete="new-password" /></label>
+            <label>Confirmar contraseña<input pInputText [type]="showInitialPassword ? 'text' : 'password'" [(ngModel)]="initialConfirmation" name="initialConfirmation" required maxlength="72" autocomplete="new-password" /></label>
+          </div><button pButton type="button" class="secondary" style="margin-top:12px" (click)="showInitialPassword = !showInitialPassword" [attr.aria-pressed]="showInitialPassword">{{ showInitialPassword ? 'Ocultar contraseñas' : 'Mostrar contraseñas' }}</button>
           <ul class="requirements"><li [class.met]="model()!['Password']?.length >= 8">Al menos 8 caracteres (máximo 72)</li><li [class.met]="initialMatches()">Ambas contraseñas coinciden</li></ul>
           @if (initialConfirmation && !initialMatches()) { <p class="form-error">Las contraseñas no coinciden.</p> }
           </section>
         }
-        <div class="user-actions"><button type="button" class="secondary" (click)="cancelEdit()">Cancelar</button><button [disabled]="userForm.invalid || (!model()!['Id_User'] && !initialMatches())">Guardar datos</button></div>
+        <div class="user-actions"><button pButton type="button" class="secondary" (click)="cancelEdit()">Cancelar</button><button pButton [disabled]="userForm.invalid || (!model()!['Id_User'] && !initialMatches())">Guardar datos</button></div>
       </form>
     } @else {
-      <section class="user-card"><div class="card-heading"><div><h2>Información general</h2><p>Datos de identificación y contacto.</p></div><button type="button" class="secondary" (click)="editing.set(true)">Editar datos</button></div>
+      <section class="user-card"><div class="card-heading"><div><h2>Información general</h2><p>Datos de identificación y contacto.</p></div><button pButton type="button" class="secondary" (click)="editing.set(true)">Editar datos</button></div>
         <dl class="user-grid">@for (f of visibleFields(); track f.key) { <div><dt>{{ f.label }}</dt><dd>{{ f.key === 'Id_User_Type' ? typeName(model()![f.key]) : (model()![f.key] || 'Sin registrar') }}</dd></div> }</dl>
       </section>
     }

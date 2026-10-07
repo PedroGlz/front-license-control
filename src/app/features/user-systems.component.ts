@@ -1,3 +1,6 @@
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
 import { Component, input, inject, signal, output, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -7,7 +10,7 @@ import { AlertService } from '../core/alert.service';
 @Component({
   standalone: true,
   selector: 'app-user-systems',
-  imports: [FormsModule],
+  imports: [ButtonModule, InputTextModule, TextareaModule, FormsModule],
   styleUrls: ['./user-detail.scss'],
   templateUrl: './user-systems.component.html',
 })

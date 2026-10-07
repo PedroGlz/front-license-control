@@ -206,7 +206,6 @@ export class LayoutComponent {
         { label: 'Clientes', path: '/clientes', icon: 'users' },
         { label: 'Licencias', path: '/licencias', icon: 'license' },
         { label: 'Versiones', path: '/versiones', icon: 'package' },
-        { label: 'Asignaciones de licencia', path: '/accesos', icon: 'access' },
         { label: 'Dispositivos', path: '/dispositivos', icon: 'phone' },
         { label: 'Códigos de activación', path: '/codigos-activacion', icon: 'access' },
       ],

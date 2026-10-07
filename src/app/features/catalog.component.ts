@@ -209,7 +209,6 @@ export class CatalogComponent {
     attributes: 'Id_Attribute',
     devices: 'Id_Device',
     licenses: 'Id_License',
-    'application-access': 'Id_Access',
   };
   constructor() {
     this.route.data.subscribe((d) => {

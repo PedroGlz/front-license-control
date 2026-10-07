@@ -19,7 +19,7 @@ function processMessage(method: string, path: string): [string, string] {
   const resource = path.split('/')[2];
   const names: Record<string, string> = { users: 'usuario', systems: 'sistema', roles: 'rol', attributes: 'atributo',
     'user-types': 'tipo de usuario', applications: 'aplicación', licenses: 'licencia', devices: 'dispositivo',
-    'application-access': 'acceso', permissions: 'permiso' };
+    permissions: 'permiso' };
   const name = names[resource] || 'registro';
   return method === 'POST' ? [`Creando ${name}`, `Estamos registrando ${['aplicación', 'licencia'].includes(name) ? 'la' : 'el'} ${name}. Por favor espera…`]
     : [`Actualizando ${name}`, 'Estamos guardando los cambios. Por favor espera…'];
