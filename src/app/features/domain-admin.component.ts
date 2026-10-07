@@ -165,7 +165,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
             @switch (resource) {
               @case ('user-types') {
                 <label
-                  >Código<input pInputText
+                  >Código <span class="required-marker" aria-hidden="true">*</span><input pInputText
                     type="text"
                     [ngModel]="code()" readonly
                     name="Code"
@@ -173,7 +173,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                     maxlength="50"
                 /></label>
                 <label
-                  >Nombre<input pInputText
+                  >Nombre <span class="required-marker" aria-hidden="true">*</span><input pInputText
                     type="text"
                     [(ngModel)]="model()!['Name']"
                     name="Name"
@@ -190,8 +190,11 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                 
               }
               @case ('systems') {
+                <section class="form-section">
+                  <h3>Datos generales</h3>
+                  <div class="grid tw:grid tw:grid-cols-1 tw:md:grid-cols-2">
                 <label
-                  >Código<input pInputText
+                  >Código <span class="required-marker" aria-hidden="true">*</span><input pInputText
                     type="text"
                     [ngModel]="code()" readonly
                     name="Code"
@@ -199,7 +202,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                     maxlength="80"
                 /></label>
                 <label
-                  >Nombre<input pInputText
+                  >Nombre <span class="required-marker" aria-hidden="true">*</span><input pInputText
                     type="text"
                     [(ngModel)]="model()!['Name']"
                     name="Name"
@@ -207,7 +210,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                     maxlength="150"
                 /></label>
                 <label
-                  >Tipo<select [(ngModel)]="model()!['System_Type']" name="System_Type" required>
+                  >Tipo de sistema <span class="required-marker" aria-hidden="true">*</span><select [(ngModel)]="model()!['System_Type']" name="System_Type" required>
                     <option value="">Seleccione</option>
                     <option>WEB</option>
                     <option>ANDROID</option>
@@ -223,25 +226,26 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                     name="Description"
                     maxlength="500"
                 /></label>
-                @if (model()!['System_Type'] === 'ANDROID') { <section style="grid-column:1/-1">
-                  <h3>Licenciamiento Android opcional</h3>
+                <label class="check"><input type="checkbox" [checked]="model()!['Is_Active'] !== false" disabled />Activo</label>
+                  </div>
+                </section>
+                @if (model()!['System_Type'] === 'ANDROID') { <section class="form-section licensing-section">
+                  <h3>Licenciamiento Android</h3>
                   <div class="grid tw:grid tw:grid-cols-1 tw:md:grid-cols-2">
-                    <label>Modalidad<select [(ngModel)]="model()!['Licensing_Mode']" name="Licensing_Mode">
-                      <option [ngValue]="null">Sin licenciamiento</option>
+                    <label>Package Name <span class="required-marker" aria-hidden="true">*</span><input pInputText [(ngModel)]="model()!['Package_Name']" name="Package_Name" maxlength="255" required /></label>
+                    <label>Modalidad de licenciamiento <span class="required-marker" aria-hidden="true">*</span><select [(ngModel)]="model()!['Licensing_Mode']" name="Licensing_Mode" required>
+                      <option value="">Seleccione</option>
                       <option value="USER_DEVICE">Por usuario y dispositivo</option>
                       <option value="DEVICE_ONLY">Por dispositivo</option>
                     </select></label>
-                    @if (model()!['Licensing_Mode'] || model()!['System_Type'] === 'ANDROID') {
-                      <label>Package name<input pInputText [(ngModel)]="model()!['Package_Name']" name="Package_Name" maxlength="255" /></label>
-                    }
-                    @if (model()!['Licensing_Mode']) { <label>Días offline<input pInputText type="number" name="Offline_Validity_Days" [(ngModel)]="model()!['Offline_Validity_Days']" min="1" max="365" step="1" required /></label> }
+                    <label>Días offline <span class="required-marker" aria-hidden="true">*</span><input pInputText type="number" name="Offline_Validity_Days" [(ngModel)]="model()!['Offline_Validity_Days']" min="1" max="365" step="1" required /><small>Máximo de días que la aplicación puede funcionar sin renovar su licencia en línea.</small></label>
                   </div>
                 </section> }
                 
               }
               @case ('roles') {
                 <label
-                  >Sistema *<select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
+                  >Sistema <span class="required-marker" aria-hidden="true">*</span><select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
                     <option [ngValue]="null">Seleccione</option>
                     @for (o of lookups['systems'] || []; track o.id) {
                       <option [value]="o.id">{{ o.label }}</option>
@@ -250,7 +254,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                 >
                 
                 <label
-                  >Nombre *<input pInputText
+                  >Nombre <span class="required-marker" aria-hidden="true">*</span><input pInputText
                     type="text"
                     [(ngModel)]="model()!['Name']"
                     name="Name"
@@ -269,7 +273,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
               }
               @case ('permissions') {
                 <label
-                  >Sistema<select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
+                  >Sistema <span class="required-marker" aria-hidden="true">*</span><select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
                     <option [ngValue]="null">Seleccione</option>
                     @for (o of lookups['systems'] || []; track o.id) {
                       <option [value]="o.id">{{ o.label }}</option>
@@ -277,7 +281,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                   </select></label
                 >
                 <label
-                  >Código<input pInputText
+                  >Código <span class="required-marker" aria-hidden="true">*</span><input pInputText
                     type="text"
                     [ngModel]="code()" readonly
                     name="Code"
@@ -285,7 +289,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                     maxlength="120"
                 /></label>
                 <label
-                  >Nombre<input pInputText
+                  >Nombre <span class="required-marker" aria-hidden="true">*</span><input pInputText
                     type="text"
                     [(ngModel)]="model()!['Name']"
                     name="Name"
@@ -318,7 +322,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
               @case ('attributes') {
                 <label class="check"><input type="checkbox" [checked]="model()!['Is_Active'] !== false" disabled />Activo</label>
                 <label
-                  >Sistema<select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
+                  >Sistema <span class="required-marker" aria-hidden="true">*</span><select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
                     <option [ngValue]="null">Seleccione</option>
                     @for (o of lookups['systems'] || []; track o.id) {
                       <option [value]="o.id">{{ o.label }}</option>
@@ -326,7 +330,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                   </select></label
                 >
                 <label
-                  >Código<input pInputText
+                  >Código <span class="required-marker" aria-hidden="true">*</span><input pInputText
                     type="text"
                     [ngModel]="code()" readonly
                     name="Code"
@@ -334,7 +338,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                     maxlength="100"
                 /></label>
                 <label
-                  >Nombre<input pInputText
+                  >Nombre <span class="required-marker" aria-hidden="true">*</span><input pInputText
                     type="text"
                     [(ngModel)]="model()!['Name']"
                     name="Name"
@@ -349,7 +353,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                     maxlength="500"
                 /></label>
                 <label
-                  >Tipo<select [(ngModel)]="model()!['Data_Type']" name="Data_Type" required>
+                  >Tipo <span class="required-marker" aria-hidden="true">*</span><select [(ngModel)]="model()!['Data_Type']" name="Data_Type" required>
                     <option value="">Seleccione</option>
                     <option>TEXT</option>
                     <option>INTEGER</option>

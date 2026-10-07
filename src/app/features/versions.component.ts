@@ -66,9 +66,9 @@ import { AlertService } from '../core/alert.service';
         <form #f="ngForm" (ngSubmit)="save()">
           <div class="dialog-heading"><h2>{{ edit()!['Id_Version'] ? 'Editar versión' : 'Subir versión APK' }}</h2><button pButton type="button" class="icon-button close-button" title="Cerrar" aria-label="Cerrar formulario" (click)="edit.set(null)"><app-icon name="close" /></button></div>
           <div class="grid tw:grid tw:grid-cols-1 tw:md:grid-cols-2">
-            <label>Sistema *<select [(ngModel)]="edit()!['Id_System']" name="applicationId" [disabled]="!!edit()!['Id_Version']" required><option value="">Seleccione</option>@for (app of applications(); track app.id) { <option [value]="app.id">{{ app.label }}</option> }</select></label>
-            <label>Versión *<input pInputText [(ngModel)]="edit()!['Version_Name']" name="versionName" required maxlength="80" /></label>
-            @if (!edit()!['Id_Version']) { <label>Archivo APK *<input type="file" accept=".apk" (change)="choose($event)" required /></label> }
+            <label>Sistema <span class="required-marker" aria-hidden="true">*</span><select [(ngModel)]="edit()!['Id_System']" name="applicationId" [disabled]="!!edit()!['Id_Version']" required><option value="">Seleccione</option>@for (app of applications(); track app.id) { <option [value]="app.id">{{ app.label }}</option> }</select></label>
+            <label>Versión <span class="required-marker" aria-hidden="true">*</span><input pInputText [(ngModel)]="edit()!['Version_Name']" name="versionName" required maxlength="80" /></label>
+            @if (!edit()!['Id_Version']) { <label>Archivo APK <span class="required-marker" aria-hidden="true">*</span><input type="file" accept=".apk" (change)="choose($event)" required /></label> }
             <label>Android mínimo<input pInputText [(ngModel)]="edit()!['Minimum_Android']" name="minimumAndroid" maxlength="40" /></label>
             <label>Notas de versión<textarea pTextarea [(ngModel)]="edit()!['Release_Notes']" name="releaseNotes" rows="3"></textarea></label>
             <label class="check"><input type="checkbox" [(ngModel)]="edit()!['Mandatory']" name="mandatory" />Actualización obligatoria</label>

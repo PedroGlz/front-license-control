@@ -32,7 +32,7 @@
         <div class="user-grid">
           @for (a of attributes(); track a['Id_Attribute']) {
               <label
-                >{{ a['Name'] }}{{ a['Is_Required'] ? ' *' : '' }}
+                >{{ a['Name'] }} @if(a['Is_Required']){<span class="required-marker" aria-hidden="true">*</span>}
                 @if (
                   a['Data_Type'] === 'MULTISELECT' ||
                   (a['Is_Multivalue'] && a['Data_Type'] === 'SELECT')

@@ -7,7 +7,7 @@ import { AlertService } from '../core/alert.service';
 @Component({standalone:true,imports:[ButtonModule, InputTextModule, FormsModule],template:`
   <h1>Clientes</h1><p>Propietarios comerciales de licencias DEVICE_ONLY.</p><button pButton (click)="edit.set({Name:'',Is_Active:true})">Nuevo cliente</button>
   @if(edit();as m){<form class="user-card" (ngSubmit)="save()" #f="ngForm"><h2>{{m['Id_Customer']?'Editar cliente':'Nuevo cliente'}}</h2>
-    <label>Nombre *<input pInputText name="Name" [(ngModel)]="m['Name']" required maxlength="200" /></label>
+    <label>Nombre <span class="required-marker" aria-hidden="true">*</span><input pInputText name="Name" [(ngModel)]="m['Name']" required maxlength="200" /></label>
     <label>Contacto<input pInputText name="Contact_Name" [(ngModel)]="m['Contact_Name']" maxlength="200" /></label>
     <label>Correo<input pInputText name="Email" type="email" [(ngModel)]="m['Email']" maxlength="255" email /></label>
     <label>Teléfono<input pInputText name="Phone" [(ngModel)]="m['Phone']" maxlength="50" /></label>

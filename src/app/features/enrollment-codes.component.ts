@@ -9,8 +9,8 @@ import { AlertService } from '../core/alert.service';
 @Component({standalone:true,imports:[ButtonModule, InputTextModule, FormsModule,DatePipe,RouterLink],template:`
   <h1>Códigos de activación</h1><p>DEVICE_ONLY: los códigos no consumen seats. El cupo se valida al completar la activación.</p><a routerLink="/licencias">Ver licencias</a>
   <form class="user-card" (ngSubmit)="generate()" #f="ngForm">
-    <label>Licencia<select name="license" [(ngModel)]="license" required><option value="">Selecciona</option>@for(e of licenses();track e['Id_License']){@if(e['Effective_Status']==='ACTIVE'){<option [value]="e['Id_License']">{{e['Customer_Name']}} · {{e['System_Name']}} · {{e['Available_Seats']}} disponibles</option>}}</select></label>
-    <label>Vencimiento del código (hora local)<input pInputText type="datetime-local" name="expires" [(ngModel)]="expires" required /></label>
+    <label>Licencia <span class="required-marker" aria-hidden="true">*</span><select name="license" [(ngModel)]="license" required><option value="">Selecciona</option>@for(e of licenses();track e['Id_License']){@if(e['Effective_Status']==='ACTIVE'){<option [value]="e['Id_License']">{{e['Customer_Name']}} · {{e['System_Name']}} · {{e['Available_Seats']}} disponibles</option>}}</select></label>
+    <label>Vencimiento del código (hora local) <span class="required-marker" aria-hidden="true">*</span><input pInputText type="datetime-local" name="expires" [(ngModel)]="expires" required /></label>
     <p>Un solo uso, con expiración máxima de 7 días. No necesita un dispositivo previamente registrado.</p>
     <footer><button pButton type="button" class="secondary" (click)="cancel()">Cancelar</button><button pButton [disabled]="f.invalid||busy()">Generar códigos</button><button pButton type="button" [disabled]="f.invalid||busy()||!customerEmail()" (click)="generate(true)">Generar y enviar por correo</button></footer>
     @if (license && !customerEmail()) { <p>El cliente no tiene un correo configurado.</p> }

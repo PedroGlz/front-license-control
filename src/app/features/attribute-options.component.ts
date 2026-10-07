@@ -34,9 +34,9 @@ interface AttributeOption { Id_Option?: string; Value_Code: string; Display_Name
         <form #optionForm="ngForm" (ngSubmit)="save()">
           <div class="dialog-heading"><h2>{{option.Id_Option ? 'Editar valor' : 'Agregar valor'}}</h2><button pButton type="button" class="icon-button" aria-label="Cerrar" [disabled]="busy()" (click)="model.set(null)"><app-icon name="close" /></button></div>
           <div class="grid option-grid">
-            <label>Valor *<input pInputText name="value" [(ngModel)]="option.Value_Code" required maxlength="100" /></label>
+            <label>Valor <span class="required-marker" aria-hidden="true">*</span><input pInputText name="value" [(ngModel)]="option.Value_Code" required maxlength="100" /></label>
             <label>Etiqueta<input pInputText name="label" [(ngModel)]="option.Display_Name" maxlength="150" /></label>
-            <label>Orden<input pInputText name="order" type="number" [(ngModel)]="option.Sort_Order" required min="0" max="2147483647" step="1" /></label>
+            <label>Orden <span class="required-marker" aria-hidden="true">*</span><input pInputText name="order" type="number" [(ngModel)]="option.Sort_Order" required min="0" max="2147483647" step="1" /></label>
             <label class="check"><input name="active" type="checkbox" [(ngModel)]="option.Is_Active" />Activo</label>
           </div>
           <div class="actions"><button pButton type="button" class="secondary" [disabled]="busy()" (click)="model.set(null)">Cancelar</button><button pButton type="submit" [disabled]="optionForm.invalid || busy() || !option.Value_Code.trim()">Guardar</button></div>

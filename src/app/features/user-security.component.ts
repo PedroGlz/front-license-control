@@ -12,8 +12,8 @@ import { AlertService } from '../core/alert.service';
     <h2>Cambiar contraseña</h2><p>Actualiza la contraseña sin modificar los datos ni los accesos del usuario.</p>
     <form #securityForm="ngForm" (ngSubmit)="submit()">
       <div class="user-grid">
-        <label>Nueva contraseña<input pInputText [type]="visible ? 'text' : 'password'" name="password" [(ngModel)]="password" required minlength="8" autocomplete="new-password" /></label>
-        <label>Confirmar contraseña<input pInputText [type]="visible ? 'text' : 'password'" name="confirmation" [(ngModel)]="confirmation" required autocomplete="new-password" /></label>
+        <label>Nueva contraseña <span class="required-marker" aria-hidden="true">*</span><input pInputText [type]="visible ? 'text' : 'password'" name="password" [(ngModel)]="password" required minlength="8" autocomplete="new-password" /></label>
+        <label>Confirmar contraseña <span class="required-marker" aria-hidden="true">*</span><input pInputText [type]="visible ? 'text' : 'password'" name="confirmation" [(ngModel)]="confirmation" required autocomplete="new-password" /></label>
       </div>
       <button pButton type="button" class="secondary" style="margin-top:12px" [attr.aria-pressed]="visible" (click)="visible = !visible">{{ visible ? 'Ocultar contraseñas' : 'Mostrar contraseñas' }}</button>
       <ul class="requirements" aria-live="polite">

@@ -20,9 +20,9 @@ import { ThemeService } from '../core/theme.service';
       <div class="brand">LC</div>
       <h1>License Control</h1>
       <p>Administración central de accesos y licencias</p>
-      <label>Usuario<input formControlName="username" autocomplete="username" /></label
+      <label>Usuario <span class="required-marker" aria-hidden="true">*</span><input formControlName="username" autocomplete="username" /></label
       ><label
-        >Contraseña<input
+        >Contraseña <span class="required-marker" aria-hidden="true">*</span><input
           type="password"
           formControlName="password"
           autocomplete="current-password" /></label

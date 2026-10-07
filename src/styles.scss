@@ -111,6 +111,16 @@ button:disabled {
   opacity: 0.55;
   cursor: default;
 }
+.required-marker {
+  color: var(--danger);
+  display: contents;
+  font-weight: 700;
+}
+.optional-label {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
 .badge {
   display: inline-block;
   background: var(--success-bg);
