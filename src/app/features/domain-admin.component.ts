@@ -107,7 +107,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
 @Component({
   standalone: true,
   imports: [SelectModule, TableModule, DialogModule, ButtonModule, InputTextModule, IconComponent, FormsModule, AttributeOptionsComponent],
-  styleUrls: ['./forms.scss'],
+  styleUrls: ['./forms.scss', './attribute-options.component.scss'],
   template: `
     <div class="page-heading tw:flex tw:flex-wrap tw:items-end tw:justify-between tw:gap-4"><h1>{{ cfg.title }}</h1><button pButton (click)="open()">Nuevo</button></div>
     <div class="panel"><div class="table-tools"><div class="table-filters"><input pInputText
@@ -159,7 +159,9 @@ for (const [resource, config] of Object.entries(CONFIG)) {
       <p-dialog [visible]="true" [modal]="true" [draggable]="false" [closable]="false" [showHeader]="false" styleClass="etic-dialog" [style]="{width: 'min(92vw, 820px)'}">
         <form #domainForm="ngForm" (ngSubmit)="save()">
           <div class="dialog-heading"><h2>{{ formTitle() }}</h2><button pButton type="button" class="icon-button close-button" title="Cerrar" aria-label="Cerrar formulario" (click)="model.set(null)"><app-icon name="close" /></button></div>
-          <div class="grid tw:grid tw:grid-cols-1 tw:md:grid-cols-2">
+          <section [class.attribute-section]="resource === 'attributes'">
+          @if(resource === 'attributes'){<h3>Datos del atributo</h3>}
+          <div class="grid tw:grid tw:grid-cols-1 tw:md:grid-cols-2" [class.attribute-grid]="resource === 'attributes'">
             @switch (resource) {
               @case ('user-types') {
                 <label
@@ -314,6 +316,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
                 
               }
               @case ('attributes') {
+                <label class="check"><input type="checkbox" [checked]="model()!['Is_Active'] !== false" disabled />Activo</label>
                 <label
                   >Sistema<select [(ngModel)]="model()!['Id_System']" name="Id_System" required>
                     <option [ngValue]="null">Seleccione</option>
@@ -415,13 +418,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
 
             }
           </div>
-          @if (
-            resource === 'attributes' &&
-            model()!['Id_Attribute'] &&
-            ['SELECT', 'MULTISELECT'].includes(model()!['Data_Type'])
-          ) {
-            <app-attribute-options [attributeId]="model()!['Id_Attribute']" />
-          }
+          </section>
           @if (error()) {
             <p class="error">{{ error() }}</p>
           }
@@ -430,6 +427,14 @@ for (const [resource, config] of Object.entries(CONFIG)) {
             ><button pButton [disabled]="domainForm.invalid">Guardar</button>
           </div>
         </form>
+          @if (
+            resource === 'attributes' &&
+            model()!['Id_Attribute'] &&
+            ['SELECT', 'MULTISELECT'].includes(model()!['Data_Type'])
+          ) {
+            <app-attribute-options [attributeId]="model()!['Id_Attribute']" />
+          }
+          @if(resource === 'attributes' && !model()!['Id_Attribute'] && ['SELECT','MULTISELECT'].includes(model()!['Data_Type'])) { <section class="attribute-section"><h3>Valores del atributo</h3><p>Guarda primero el atributo para agregar sus valores.</p></section> }
       </p-dialog>
     }
   `,
