@@ -205,9 +205,9 @@ export class LayoutComponent {
       items: [
         { label: 'Clientes', path: '/clientes', icon: 'users' },
         { label: 'Licencias', path: '/licencias', icon: 'license' },
-        { label: 'Versiones', path: '/versiones', icon: 'package' },
-        { label: 'Dispositivos', path: '/dispositivos', icon: 'phone' },
         { label: 'Códigos de activación', path: '/codigos-activacion', icon: 'access' },
+        { label: 'Dispositivos', path: '/dispositivos', icon: 'phone' },
+        { label: 'Versiones', path: '/versiones', icon: 'package' },
       ],
     },
 //     { title: 'Seguridad', items: [{ label: 'Auditoría', path: '/auditoria', icon: 'history' }] },

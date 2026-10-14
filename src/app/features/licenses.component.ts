@@ -33,6 +33,7 @@ import { ApiService } from '../core/api.service';
             <button pButton type="button" class="icon-button secondary" aria-label="Ver detalle" title="Ver detalle" (click)="show(l)"><i class="pi pi-eye"></i></button>
             @if(l['Effective_Status']==='ACTIVE'){<button pButton type="button" class="icon-button secondary" aria-label="Suspender" title="Suspender" [disabled]="busy()" (click)="change(l,'SUSPENDED')"><i class="pi pi-pause"></i></button>}
             @if(l['Effective_Status']==='SUSPENDED'){<button pButton type="button" class="icon-button secondary" aria-label="Reactivar" title="Reactivar" [disabled]="busy()" (click)="change(l,'ACTIVE')"><i class="pi pi-play"></i></button>}
+            @if(l['Term_Type']!=='PERPETUAL' && l['Status']!=='REVOKED'){<button pButton type="button" class="icon-button secondary" aria-label="Renovar" title="Renovar" [disabled]="busy()" (click)="renew(l)"><i class="pi pi-calendar-plus"></i></button>}
             @if(l['Status']!=='REVOKED'){<button pButton type="button" class="icon-button secondary" aria-label="Revocar" title="Revocar" [disabled]="busy()" (click)="change(l,'REVOKED')"><i class="pi pi-ban"></i></button>}
           </div></td>
         </tr></ng-template>
@@ -47,8 +48,9 @@ import { ApiService } from '../core/api.service';
           <section class="form-section"><h3>Datos de licencia</h3><div class="grid">
             <label>Sistema Android <span class="required-marker" aria-hidden="true">*</span><select name="system" [(ngModel)]="model['Id_System']" (ngModelChange)="systemChanged()" required><option value="">Selecciona</option>@for(s of systems();track s['id']){<option [value]="s['id']">{{s['label']}}</option>}</select></label>
             <label>Modalidad<div class="readonly-value">{{mode() ? modeLabel(mode()) : 'Selecciona un sistema'}}</div></label>
-            @if(mode()==='USER_DEVICE'){<label>Usuario <span class="required-marker" aria-hidden="true">*</span><select name="user" [(ngModel)]="model['Id_User']" required><option value="">Selecciona</option>@for(u of users();track u['id']){<option [value]="u['id']">{{u['label']}}</option>}</select></label>}
-            @if(mode()){<label>Cliente @if(mode()==='DEVICE_ONLY'){<span class="required-marker" aria-hidden="true">*</span>}@else{<span class="optional-label">(opcional)</span>}<select name="customer" [(ngModel)]="model['Id_Customer']" [required]="mode()==='DEVICE_ONLY'"><option value="">Selecciona</option>@for(c of customers();track c['Id_Customer']){@if(c['Is_Active']){<option [value]="c['Id_Customer']">{{c['Name']}}</option>}}</select></label>}
+            @if(mode()==='DEVICE_ONLY'){<label>Tipo de titular <span class="required-marker" aria-hidden="true">*</span><select name="ownerType" [(ngModel)]="ownerType" (ngModelChange)="ownerTypeChanged()" required><option value="CUSTOMER">Cliente</option><option value="USER">Usuario</option></select></label>}
+            @if(mode()==='USER_DEVICE' || mode()==='DEVICE_ONLY' && ownerType==='USER'){<label>Usuario <span class="required-marker" aria-hidden="true">*</span><select name="user" [(ngModel)]="model['Id_User']" required><option value="">Selecciona</option>@for(u of users();track u['id']){<option [value]="u['id']">{{u['label']}}</option>}</select></label>}
+            @if(mode()==='DEVICE_ONLY' && ownerType==='CUSTOMER' || mode()==='USER_DEVICE'){<label>Cliente @if(mode()==='DEVICE_ONLY'){<span class="required-marker" aria-hidden="true">*</span>}@else{<span class="optional-label">(opcional)</span>}<select name="customer" [(ngModel)]="model['Id_Customer']" [required]="mode()==='DEVICE_ONLY'"><option value="">Selecciona</option>@for(c of customers();track c['Id_Customer']){@if(c['Is_Active']){<option [value]="c['Id_Customer']">{{c['Name']}}</option>}}</select></label>}
             <label>Vigencia <span class="required-marker" aria-hidden="true">*</span><select name="term" [(ngModel)]="model['Term_Type']" required><option value="MONTHLY">Mensual</option><option value="ANNUAL">Anual</option><option value="PERPETUAL">Permanente</option></select></label>
             <label>Número de dispositivos <span class="required-marker" aria-hidden="true">*</span><input pInputText type="number" name="seats" [(ngModel)]="model['Seat_Count']" min="1" step="1" required /></label>
           </div></section>
@@ -61,6 +63,7 @@ import { ApiService } from '../core/api.service';
     <p-dialog [visible]="!!detail()" [modal]="true" [draggable]="false" [closable]="false" [showHeader]="false" styleClass="etic-dialog" [style]="{width:'min(94vw, 760px)'}">
       @if(detail(); as d){
         <div class="dialog-heading"><div><h2>{{d['System_Name']}}</h2><p>Dispositivos vinculados a la licencia.</p></div><button pButton type="button" class="icon-button secondary" aria-label="Cerrar" (click)="detail.set(null)"><i class="pi pi-times"></i></button></div>
+        <section class="form-section"><div class="detail-list"><div><span class="secondary-cell">Titular</span><div>{{d['Id_Customer'] ? 'Cliente' : 'Usuario'}} · {{owner(d)}}</div></div><div><span class="secondary-cell">Modalidad y vigencia</span><div>{{modeLabel(d['Licensing_Mode'])}} · {{term(d['Term_Type'])}}</div></div><div><span class="secondary-cell">Dispositivos autorizados</span><div>{{d['Seat_Count']}}</div></div><div><span class="secondary-cell">Estado</span><div>{{status(d['Effective_Status'])}}</div></div></div></section>
         @if(d['Effective_Status']==='ACTIVE' && d['Licensing_Mode']==='DEVICE_ONLY'){<section class="form-section"><a class="action-link" routerLink="/codigos-activacion" [queryParams]="{license:d['Id_License']}">Generar código de activación</a><p class="secondary-cell">Generar códigos no reserva cupo.</p></section>}
         @if(d['Licensing_Mode']==='USER_DEVICE' && d['Effective_Status']==='ACTIVE'){<section class="form-section"><label>Dispositivo registrado<select [(ngModel)]="selectedDevice"><option value="">Selecciona</option>@for(device of devices();track device['id']){@if(device['Status']==='ACTIVE'){<option [value]="device['id']">{{device['label']}}</option>}}</select></label><button pButton type="button" [disabled]="!selectedDevice || busy() || d['Available_Seats']<1" (click)="link(d)">Vincular dispositivo</button></section>}
         <div class="detail-list">@for(device of d['devices'];track device['Id_License_Device']){<article class="detail-item"><strong>{{device['Display_Name'] || device['Model'] || 'Dispositivo'}}</strong><p>{{device['Manufacturer']}} {{device['Model']}} · Android {{device['Android_Version']}} · APK {{device['App_Version']}}</p><p>Vínculo: {{status(device['License_Status'])}} · Dispositivo: {{status(device['Status'])}}</p><p>Activación: {{device['Activated_At'] | date:'dd/MM/yyyy HH:mm'}} · Última validación: {{device['Last_Validation_At'] ? (device['Last_Validation_At'] | date:'dd/MM/yyyy HH:mm') : 'Sin validaciones'}}</p></article>}@empty{<div class="empty-state">Aún no hay dispositivos vinculados.</div>}</div>
@@ -85,6 +88,7 @@ export class LicensesComponent {
   search = signal('');
   statusFilter = signal('');
   selectedDevice = '';
+  ownerType: 'CUSTOMER' | 'USER' = 'CUSTOMER';
   model: Record<string, any> = {Id_Customer: '', Id_User: this.route.snapshot.queryParamMap.get('user') || '', Id_System: '', Term_Type: 'MONTHLY', Seat_Count: 1};
   filteredRows = computed(() => {
     const query = this.search().trim().toLocaleLowerCase();
@@ -100,15 +104,16 @@ export class LicensesComponent {
   }
   mode() { return this.systems().find(s => s['id'] === this.model['Id_System'])?.['Licensing_Mode'] || ''; }
   modeLabel(value: string) { return value === 'USER_DEVICE' ? 'Usuario y dispositivo' : value === 'DEVICE_ONLY' ? 'Solo dispositivo' : value; }
-  owner(l: Record<string, any>) { return l['Licensing_Mode'] === 'USER_DEVICE' ? (l['User_Name'] || 'Sin usuario') : (l['Customer_Name'] || 'Sin cliente'); }
+  owner(l: Record<string, any>) { return l['Id_Customer'] ? (l['Customer_Name'] || 'Sin cliente') : (l['User_Name'] || 'Sin usuario'); }
   termSummary() { return ({MONTHLY: 'Un mes desde la activación', ANNUAL: 'Un año desde la activación', PERPETUAL: 'Permanente'} as Record<string, string>)[this.model['Term_Type']] || ''; }
-  systemChanged() { if (this.mode() === 'DEVICE_ONLY') this.model['Id_User'] = ''; }
+  systemChanged() { if (this.mode() === 'DEVICE_ONLY') { this.ownerType = 'CUSTOMER'; this.model['Id_User'] = ''; } }
+  ownerTypeChanged() { if (this.ownerType === 'CUSTOMER') this.model['Id_User'] = ''; else this.model['Id_Customer'] = ''; }
   load() { this.api.get<Record<string, any>[]>('/admin/licenses').subscribe({next: r => this.rows.set(r), error: e => this.error(e)}); }
   show(l: Record<string, any>) { this.api.get<Record<string, any>>('/admin/licenses/' + l['Id_License']).subscribe({next: r => this.detail.set(r), error: e => this.error(e)}); }
   async create() {
     if (this.busy() || !(await this.alerts.confirm('¿Crear licencia?', 'La vigencia comienza ahora.')).isConfirmed) return;
     this.busy.set(true);
-    const body = {...this.model, Id_User: this.mode() === 'USER_DEVICE' ? this.model['Id_User'] : null};
+    const body = {...this.model, Id_User: this.mode() === 'USER_DEVICE' || this.ownerType === 'USER' ? this.model['Id_User'] : null, Id_Customer: this.mode() === 'DEVICE_ONLY' && this.ownerType === 'USER' ? null : (this.model['Id_Customer'] || null)};
     this.api.create('licenses', body).subscribe({next: r => { this.busy.set(false); this.creating.set(false); this.load(); this.show(r); void this.alerts.success('Licencia creada'); }, error: e => { this.busy.set(false); this.error(e); }});
   }
   async change(l: Record<string, any>, status: string) {
@@ -116,6 +121,7 @@ export class LicensesComponent {
     this.busy.set(true);
     this.api.post('/admin/licenses/' + l['Id_License'] + '/status', {status}).subscribe({next: () => { this.busy.set(false); this.detail.set(null); this.load(); void this.alerts.success('Estado actualizado'); }, error: e => { this.busy.set(false); this.error(e); }});
   }
+  async renew(l: Record<string, any>) { if (this.busy() || !(await this.alerts.confirm('¿Renovar licencia?', 'Se agregará un periodo desde el vencimiento actual o desde hoy si ya venció.')).isConfirmed) return; this.busy.set(true); this.api.post('/admin/licenses/' + l['Id_License'] + '/renew', {requestId: crypto.randomUUID()}).subscribe({next: () => { this.busy.set(false); this.detail.set(null); this.load(); void this.alerts.success('Licencia renovada'); }, error: e => { this.busy.set(false); this.error(e); }}); }
   async link(l: Record<string, any>) {
     if (this.busy() || !(await this.alerts.confirm('¿Vincular dispositivo?', 'Se consumirá un seat disponible.')).isConfirmed) return;
     this.busy.set(true);
