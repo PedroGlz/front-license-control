@@ -3,6 +3,8 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 import { ThemeService } from '../core/theme.service';
+import { AlertService } from '../core/alert.service';
+import Swal from 'sweetalert2';
 @Component({
   standalone: true,
   imports: [IconComponent, RouterLink, RouterLinkActive, RouterOutlet],
@@ -34,6 +36,7 @@ import { ThemeService } from '../core/theme.service';
         >
           {{ theme.mode() === 'dark' ? '☀' : '☾' }}</button
         ><span class="user">{{ auth.user()?.firstName }} {{ auth.user()?.lastName }}</span
+        ><button class="link password" title="Cambiar mi contraseña" aria-label="Cambiar mi contraseña" (click)="changePassword()"><app-icon name="key" /></button
         ><button class="link logout" title="Cerrar sesión" aria-label="Cerrar sesión" (click)="auth.logout()"><app-icon name="logout" /></button>
       </header>
       <main><router-outlet /></main>
@@ -138,8 +141,8 @@ import { ThemeService } from '../core/theme.service';
         font-weight: 600;
         font-size: 14px;
       }
-      .logout { display: inline-flex; padding: 9px; border-radius: 50%; }
-      .logout:hover { background: var(--primary-soft); }
+      .logout, .password { display: inline-flex; padding: 9px; border-radius: 50%; }
+      .logout:hover, .password:hover { background: var(--primary-soft); }
       main {
         padding: 26px;
       }
@@ -185,6 +188,7 @@ import { ThemeService } from '../core/theme.service';
 export class LayoutComponent {
   auth = inject(AuthService);
   theme = inject(ThemeService);
+  alerts = inject(AlertService);
   open = signal(false);
   menu = [
 //     { title: '', items: [{ label: 'Dashboard', path: '/dashboard', icon: 'home' }] },
@@ -206,10 +210,15 @@ export class LayoutComponent {
         { label: 'Clientes', path: '/clientes', icon: 'users' },
         { label: 'Licencias', path: '/licencias', icon: 'license' },
         { label: 'Códigos de activación', path: '/codigos-activacion', icon: 'access' },
+        { label: 'Configuración de correos', path: '/configuracion-correos', icon: 'mail' },
         { label: 'Dispositivos', path: '/dispositivos', icon: 'phone' },
         { label: 'Versiones', path: '/versiones', icon: 'package' },
       ],
     },
 //     { title: 'Seguridad', items: [{ label: 'Auditoría', path: '/auditoria', icon: 'history' }] },
   ];
+  async changePassword(){
+    const result=await Swal.fire({title:'Cambiar mi contraseña',html:'<input id="lc-current" class="swal2-input" type="password" autocomplete="current-password" placeholder="Contraseña actual"><input id="lc-new" class="swal2-input" type="password" autocomplete="new-password" placeholder="Nueva contraseña"><input id="lc-confirm" class="swal2-input" type="password" autocomplete="new-password" placeholder="Confirmar contraseña">',showCancelButton:true,confirmButtonText:'Actualizar',cancelButtonText:'Cancelar',preConfirm:()=>{const current=(document.getElementById('lc-current') as HTMLInputElement).value,newPassword=(document.getElementById('lc-new') as HTMLInputElement).value,confirmation=(document.getElementById('lc-confirm') as HTMLInputElement).value;if(!current||newPassword.length<8||newPassword!==confirmation){Swal.showValidationMessage('Completa los campos y confirma correctamente la nueva contraseña.');return false;}return {current,newPassword};}});
+    if(!result.value)return;const wait=this.alerts.loading('Actualizando contraseña');this.auth.changePassword(result.value.current,result.value.newPassword).subscribe({next:()=>{this.alerts.closeLoading(wait);void this.alerts.success('Contraseña actualizada');},error:e=>{this.alerts.closeLoading(wait);void this.alerts.error('No fue posible actualizarla',this.alerts.message(e));}});
+  }
 }

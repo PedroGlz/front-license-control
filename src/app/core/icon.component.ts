@@ -29,5 +29,6 @@ export class IconComponent {
     users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M17 3a4 4 0 0 1 0 8 M22 21v-2a4 4 0 0 0-3-4',
     catalog: 'M4 3h16v18H4V3z M8 7h8 M8 12h8 M8 17h5',
     license: 'M12 3l8 4v6c0 4-8 8-8 8s-8-4-8-8V7l8-4z M8 12l3 3 5-6',
+    mail: 'M3 5h18v14H3V5z M3 6l9 7 9-7',
   };
 }

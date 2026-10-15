@@ -16,7 +16,14 @@ import { ThemeService } from '../core/theme.service';
     >
       {{ theme.mode() === 'dark' ? '☀' : '☾' }}
     </button>
-    <form class="card" [formGroup]="form" (ngSubmit)="submit()">
+    <form class="card" [formGroup]="requiredForm" (ngSubmit)="changeRequired()" [hidden]="!mustChange()">
+      <div class="brand">LC</div><h1>Crea una nueva contraseña</h1><p>Debes actualizar la contraseña temporal antes de continuar.</p>
+      <label>Contraseña temporal <span class="required-marker">*</span><input type="password" formControlName="currentPassword" autocomplete="current-password" /></label>
+      <label>Nueva contraseña <span class="required-marker">*</span><input type="password" formControlName="newPassword" autocomplete="new-password" /></label>
+      <label>Confirmar contraseña <span class="required-marker">*</span><input type="password" formControlName="confirmation" autocomplete="new-password" /></label>
+      <button [disabled]="requiredForm.invalid || loading()">Actualizar contraseña</button>
+    </form>
+    <form class="card" [formGroup]="form" (ngSubmit)="submit()" [hidden]="mustChange()">
       <div class="brand">LC</div>
       <h1>License Control</h1>
       <p>Administración central de accesos y licencias</p>
@@ -108,16 +115,22 @@ export class LoginComponent {
   private alerts = inject(AlertService);
   theme = inject(ThemeService);
   loading = signal(false);
+  mustChange = signal(false);
   form = new FormGroup({
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+  });
+  requiredForm = new FormGroup({
+    currentPassword: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    newPassword: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(8)] }),
+    confirmation: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
   submit() {
     if (this.form.invalid || this.loading()) return;
     this.loading.set(true);
     const v = this.form.getRawValue();
     this.a.login(v.username, v.password).subscribe({
-      next: () => this.r.navigateByUrl('/usuarios'),
+      next: (result) => { this.loading.set(false); if(result.passwordChangeRequired){this.requiredForm.controls.currentPassword.setValue(v.password);this.mustChange.set(true);return;}void this.r.navigateByUrl('/usuarios'); },
       error: (e) => {
         this.loading.set(false);
         void this.alerts.error(
@@ -126,5 +139,12 @@ export class LoginComponent {
         );
       },
     });
+  }
+  changeRequired() {
+    if(this.requiredForm.invalid||this.loading())return;
+    const v=this.requiredForm.getRawValue();
+    if(v.newPassword!==v.confirmation){void this.alerts.warning('Revisa las contraseñas','La confirmación no coincide.');return;}
+    this.loading.set(true);
+    this.a.changePassword(v.currentPassword,v.newPassword,true).subscribe({next:()=>{this.loading.set(false);this.mustChange.set(false);this.form.reset();this.requiredForm.reset();void this.alerts.success('Contraseña actualizada','Inicia sesión con tu nueva contraseña.');},error:e=>{this.loading.set(false);void this.alerts.error('No fue posible actualizarla',this.alerts.message(e,'Verifica la contraseña temporal y los requisitos.'));}});
   }
 }

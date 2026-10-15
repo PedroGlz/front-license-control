@@ -22,6 +22,7 @@ export const routes: Routes = [
     { path: 'licencias', loadComponent: () => import('./features/licenses.component').then(m => m.LicensesComponent) },
     { path: 'dispositivos', loadComponent: () => import('./features/devices.component').then(m => m.DevicesComponent) },
     { path: 'codigos-activacion', loadComponent: () => import('./features/enrollment-codes.component').then(m => m.EnrollmentCodesComponent) },
+    { path: 'configuracion-correos', loadComponent: () => import('./features/mail-settings.component').then(m => m.MailSettingsComponent) },
 //     { path: 'auditoria', component: AuditComponent },
     { path: '', pathMatch: 'full', redirectTo: 'usuarios' }
   ]},
