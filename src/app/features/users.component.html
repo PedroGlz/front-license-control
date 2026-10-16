@@ -11,6 +11,7 @@
             <th (click)="sortBy('Username')">Usuario</th>
             <th (click)="sortBy('First_Name')">Nombre</th>
             <th (click)="sortBy('Email')">Email</th>
+            <th (click)="sortBy('Telefono')">Teléfono</th>
             <th>Tipo</th>
             <th></th>
           </tr>
@@ -21,6 +22,7 @@
               <td>{{ u['Username'] }}</td>
               <td>{{ u['First_Name'] }} {{ u['Last_Name'] }}</td>
               <td>{{ u['Email'] }}</td>
+              <td>{{ u['Telefono'] }}</td>
               <td>{{ typeName(u['Id_User_Type']) }}</td>
               <td><button pButton type="button" class="icon-button" title="Ver / Editar" aria-label="Ver / Editar" (click)="edit(u)"><app-icon name="edit" /></button><button pButton type="button" class="icon-button danger" title="Desactivar" aria-label="Desactivar" (click)="remove(u)"><app-icon name="trash" /></button></td>
             </tr>

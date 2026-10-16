@@ -47,6 +47,7 @@ export class UsersComponent {
     { key: 'Last_Name', label: 'Apellido paterno', max: 150 },
     { key: 'Second_Last_Name', label: 'Apellido materno', max: 150 },
     { key: 'Email', label: 'Email', type: 'email', max: 254 },
+    { key: 'Telefono', label: 'Teléfono', type: 'tel', max: 20 },
     { key: 'Id_User_Type', label: 'Tipo de usuario', required: true },
     { key: 'Password', label: 'Contraseña', type: 'password', max: 72, required: true },
   ];
@@ -99,6 +100,7 @@ export class UsersComponent {
             Last_Name: '',
             Second_Last_Name: '',
             Email: '',
+            Telefono: '',
             Password: '',
           },
     );
