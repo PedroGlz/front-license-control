@@ -32,6 +32,7 @@ import { MexicoDatePipe } from '../core/mexico-date.pipe';
           <td>{{l['Seat_Count']}}</td><td>{{l['Used_Seats']}}</td><td>{{l['Available_Seats']}}</td><td>{{l['Activated_At'] | mexicoDate}}</td><td>{{l['Expires_At'] ? (l['Expires_At'] | mexicoDate) : 'Sin vencimiento'}}</td>
           <td><div class="actions-cell">
             <button pButton type="button" class="icon-button secondary" aria-label="Ver detalle" title="Ver detalle" (click)="show(l)"><i class="pi pi-eye"></i></button>
+            @if(l['Status']!=='REVOKED'){<button pButton type="button" class="icon-button secondary" aria-label="Cambiar vigencia" title="Cambiar vigencia" [disabled]="busy()" (click)="openTermEditor(l)"><i class="pi pi-pencil"></i></button>}
             @if(l['Effective_Status']==='ACTIVE'){<button pButton type="button" class="icon-button secondary" aria-label="Suspender" title="Suspender" [disabled]="busy()" (click)="change(l,'SUSPENDED')"><i class="pi pi-pause"></i></button>}
             @if(l['Effective_Status']==='SUSPENDED'){<button pButton type="button" class="icon-button secondary" aria-label="Reactivar" title="Reactivar" [disabled]="busy()" (click)="change(l,'ACTIVE')"><i class="pi pi-play"></i></button>}
             @if(l['Term_Type']!=='PERPETUAL' && l['Status']!=='REVOKED'){<button pButton type="button" class="icon-button secondary" aria-label="Renovar" title="Renovar" [disabled]="busy()" (click)="renew(l)"><i class="pi pi-calendar-plus"></i></button>}
@@ -61,6 +62,19 @@ import { MexicoDatePipe } from '../core/mexico-date.pipe';
       </form>
     </p-dialog>
 
+    <p-dialog [visible]="!!editingTerm()" [modal]="true" [draggable]="false" [closable]="false" [showHeader]="false" styleClass="etic-dialog" [style]="{width:'min(92vw, 560px)'}">
+      @if(editingTerm(); as licenseToEdit){
+        <div class="dialog-heading"><div><h2>Cambiar vigencia</h2><p>Se conservarán la licencia, dispositivos y códigos existentes.</p></div><button pButton type="button" class="icon-button secondary" aria-label="Cerrar" (click)="editingTerm.set(null)"><i class="pi pi-times"></i></button></div>
+        <section class="form-section">
+          <div class="detail-list"><div><span class="secondary-cell">Titular</span><div>{{owner(licenseToEdit)}}</div></div><div><span class="secondary-cell">Vigencia actual</span><div>{{term(licenseToEdit['Term_Type'])}}</div></div></div>
+          <label>Nueva vigencia <span class="required-marker" aria-hidden="true">*</span><select [(ngModel)]="termType"><option value="MONTHLY">Mensual</option><option value="ANNUAL">Anual</option><option value="PERPETUAL">Permanente</option></select></label>
+          <div class="readonly-value">{{termType==='PERPETUAL' ? 'Sin vencimiento' : 'Vence aproximadamente el ' + (termPreview() | mexicoDate)}}</div>
+          <p class="secondary-cell">La fecha definitiva se calculará en el servidor desde el momento de guardar.</p>
+        </section>
+        <footer><button pButton type="button" class="secondary" (click)="editingTerm.set(null)">Cancelar</button><button pButton type="button" [disabled]="busy() || termType===licenseToEdit['Term_Type']" (click)="saveTerm(licenseToEdit)">Guardar cambio</button></footer>
+      }
+    </p-dialog>
+
     <p-dialog [visible]="!!detail()" [modal]="true" [draggable]="false" [closable]="false" [showHeader]="false" styleClass="etic-dialog" [style]="{width:'min(94vw, 760px)'}">
       @if(detail(); as d){
         <div class="dialog-heading"><div><h2>{{d['System_Name']}}</h2><p>Dispositivos vinculados a la licencia.</p></div><button pButton type="button" class="icon-button secondary" aria-label="Cerrar" (click)="detail.set(null)"><i class="pi pi-times"></i></button></div>
@@ -83,12 +97,14 @@ export class LicensesComponent {
   systems = signal<Record<string, any>[]>([]);
   users = signal<Record<string, any>[]>([]);
   detail = signal<Record<string, any> | null>(null);
+  editingTerm = signal<Record<string, any> | null>(null);
   creating = signal(false);
   busy = signal(false);
   devices = signal<Record<string, any>[]>([]);
   search = signal('');
   statusFilter = signal('');
   selectedDevice = '';
+  termType = 'MONTHLY';
   ownerType: 'CUSTOMER' | 'USER' = 'CUSTOMER';
   model: Record<string, any> = {Id_Customer: '', Id_User: this.route.snapshot.queryParamMap.get('user') || '', Id_System: '', Term_Type: 'MONTHLY', Seat_Count: 1};
   filteredRows = computed(() => {
@@ -123,6 +139,16 @@ export class LicensesComponent {
     this.api.post('/admin/licenses/' + l['Id_License'] + '/status', {status}).subscribe({next: () => { this.busy.set(false); this.detail.set(null); this.load(); void this.alerts.success('Estado actualizado'); }, error: e => { this.busy.set(false); this.error(e); }});
   }
   async renew(l: Record<string, any>) { if (this.busy() || !(await this.alerts.confirm('¿Renovar licencia?', 'Se agregará un periodo desde el vencimiento actual o desde hoy si ya venció.')).isConfirmed) return; this.busy.set(true); this.api.post('/admin/licenses/' + l['Id_License'] + '/renew', {requestId: crypto.randomUUID()}).subscribe({next: () => { this.busy.set(false); this.detail.set(null); this.load(); void this.alerts.success('Licencia renovada'); }, error: e => { this.busy.set(false); this.error(e); }}); }
+  openTermEditor(l: Record<string, any>) { this.termType = l['Term_Type']; this.editingTerm.set(l); }
+  termPreview() { const value=new Date(); if(this.termType==='MONTHLY')value.setMonth(value.getMonth()+1);else if(this.termType==='ANNUAL')value.setMonth(value.getMonth()+12);return value.toISOString(); }
+  async saveTerm(l: Record<string, any>) {
+    if(this.busy()||this.termType===l['Term_Type'])return;
+    const expiration=this.termType==='PERPETUAL'?'Sin vencimiento':String(new MexicoDatePipe().transform(this.termPreview()));
+    const message=`${this.term(l['Term_Type'])} → ${this.term(this.termType)}. Nueva vigencia: ${expiration}. Se conservarán los dispositivos y códigos existentes.`;
+    if(!(await this.alerts.confirm('¿Cambiar vigencia de la licencia?',message)).isConfirmed)return;
+    this.busy.set(true);
+    this.api.put('/admin/licenses/'+l['Id_License']+'/term',{termType:this.termType}).subscribe({next:()=>{this.busy.set(false);this.editingTerm.set(null);this.load();void this.alerts.success('Vigencia actualizada');},error:e=>{this.busy.set(false);this.error(e);}});
+  }
   async link(l: Record<string, any>) {
     if (this.busy() || !(await this.alerts.confirm('¿Vincular dispositivo?', 'Se consumirá un seat disponible.')).isConfirmed) return;
     this.busy.set(true);

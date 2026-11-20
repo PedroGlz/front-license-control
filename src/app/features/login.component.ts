@@ -139,10 +139,11 @@ export class LoginComponent {
     if (this.recoveryForm.invalid || this.loading()) { this.recoveryForm.markAllAsTouched(); return; }
     this.loading.set(true);
     this.a.requestPasswordReset(this.recoveryForm.controls.identifier.value.trim()).subscribe({
-      next: result => { this.loading.set(false); this.recovery.set(false); this.recoveryForm.reset(); void this.alerts.success('Solicitud procesada', result.message); },
-      error: () => { this.loading.set(false); this.recovery.set(false); this.recoveryForm.reset(); void this.alerts.success('Solicitud procesada', 'Si los datos corresponden a una cuenta registrada, recibirás instrucciones en el correo configurado.'); }
+      next: result => { this.loading.set(false); if(result.status==='ACCEPTED'){this.recovery.set(false);this.recoveryForm.reset();void this.alerts.success('Solicitud recibida',result.message);}else if(result.status==='RATE_LIMITED'){void this.alerts.warning('Espera antes de reintentar',`${result.message} ${this.waitText(result.retryAfterSeconds)}`);}else void this.alerts.error('No se pudo completar la solicitud',result.message); },
+      error: e => { this.loading.set(false); void this.alerts.error('No se pudo completar la solicitud',this.alerts.message(e,'Reintenta más tarde o contacta a soporte.')); }
     });
   }
+  private waitText(seconds:number){const value=Math.max(1,Math.ceil(seconds));return value>=60?`Intenta nuevamente en ${Math.ceil(value/60)} min.`:`Intenta nuevamente en ${value} s.`;}
   submit() {
     if (this.form.invalid || this.loading()) return;
     this.loading.set(true);
