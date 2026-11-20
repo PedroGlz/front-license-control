@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -7,10 +6,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { AlertService } from '../core/alert.service';
 import { ApiService } from '../core/api.service';
+import { MexicoDatePipe } from '../core/mexico-date.pipe';
 
 @Component({
   standalone: true,
-  imports: [ButtonModule, DatePipe, DialogModule, FormsModule, InputTextModule, TableModule],
+  imports: [ButtonModule, MexicoDatePipe, DialogModule, FormsModule, InputTextModule, TableModule],
   template: `
     <div class="page-heading"><div><h1>Dispositivos</h1><p>Se registran mediante enrollment. No existe alta manual.</p></div></div>
 
@@ -24,11 +24,11 @@ import { ApiService } from '../core/api.service';
       </div></div>
 
       <p-table [value]="rows()" styleClass="etic-table" [scrollable]="true">
-        <ng-template #header><tr><th>Nombre</th><th>Fabricante</th><th>Modelo</th><th>Android</th><th>APK</th><th>Estado</th><th>Activación</th><th>Última validación</th><th>Acciones</th></tr></ng-template>
+        <ng-template #header><tr><th>Nombre</th><th>Propietario actual</th><th>Aplicación / licencia</th><th>Fabricante</th><th>Modelo</th><th>Android</th><th>APK</th><th>Estado</th><th>Activación</th><th>Última validación</th><th>Acciones</th></tr></ng-template>
         <ng-template #body let-d><tr>
-          <td class="main-cell">{{d['Display_Name'] || 'Dispositivo sin nombre'}}</td><td>{{d['Manufacturer'] || '—'}}</td><td>{{d['Model'] || '—'}}</td><td>{{d['Android_Version'] || '—'}}</td><td>{{d['App_Version'] || '—'}}</td>
+          <td class="main-cell">{{d['Display_Name'] || 'Dispositivo sin nombre'}}</td><td>{{d['Current_Owners'] || 'Sin propietario'}}</td><td>{{d['Current_Associations'] || 'Sin asociación vigente'}}</td><td>{{d['Manufacturer'] || '—'}}</td><td>{{d['Model'] || '—'}}</td><td>{{d['Android_Version'] || '—'}}</td><td>{{d['App_Version'] || '—'}}</td>
           <td><span class="status-badge" [class.active]="d['Status']==='ACTIVE'">{{stateLabel(d['Status'])}}</span></td>
-          <td>{{d['Activated_At'] | date:'dd/MM/yyyy HH:mm'}}</td><td>{{d['Last_Validation_At'] ? (d['Last_Validation_At'] | date:'dd/MM/yyyy HH:mm') : 'Sin validaciones'}}</td>
+          <td>{{d['Activated_At'] | mexicoDate}}</td><td>{{d['Last_Validation_At'] ? (d['Last_Validation_At'] | mexicoDate) : 'Sin validaciones'}}</td>
           <td><div class="actions-cell">
             <button pButton type="button" class="icon-button secondary" aria-label="Ver detalle" title="Ver detalle" (click)="detail.set(d)"><i class="pi pi-eye"></i></button>
             @if(d['Status']==='ACTIVE'){
@@ -45,7 +45,7 @@ import { ApiService } from '../core/api.service';
             }
           </div></td>
         </tr></ng-template>
-        <ng-template #emptymessage><tr><td colspan="9"><div class="empty-state">No hay dispositivos que coincidan con los filtros.</div></td></tr></ng-template>
+        <ng-template #emptymessage><tr><td colspan="11"><div class="empty-state">No hay dispositivos que coincidan con los filtros.</div></td></tr></ng-template>
       </p-table>
 
       <footer class="pager"><button pButton class="secondary" [disabled]="page()===0" (click)="previous()"><i class="pi pi-chevron-left"></i> Anterior</button><span>Página {{page()+1}}</span><button pButton class="secondary" [disabled]="rows().length<25" (click)="next()">Siguiente <i class="pi pi-chevron-right"></i></button></footer>
@@ -58,8 +58,11 @@ import { ApiService } from '../core/api.service';
           <div class="detail-item"><span class="secondary-cell">Id del dispositivo</span><div class="cell-wrap">{{d['Id_Device']}}</div></div>
           <div class="detail-item"><span class="secondary-cell">Fingerprint</span><div class="cell-wrap">{{d['Fingerprint'] || 'No disponible'}}</div></div>
           <div class="detail-item"><span class="secondary-cell">Estado</span><div>{{stateLabel(d['Status'])}}</div></div>
-          <div class="detail-item"><span class="secondary-cell">Registro / activación</span><div>{{(d['Created_At'] || d['Activated_At']) | date:'dd/MM/yyyy HH:mm'}}</div></div>
-          <div class="detail-item"><span class="secondary-cell">Última validación</span><div>{{d['Last_Validation_At'] ? (d['Last_Validation_At'] | date:'dd/MM/yyyy HH:mm') : 'Sin validaciones'}}</div></div>
+          <div class="detail-item"><span class="secondary-cell">Propietario vigente</span><div>{{d['Current_Owners'] || 'Sin propietario'}}</div></div>
+          <div class="detail-item"><span class="secondary-cell">Asociaciones vigentes</span><div>{{d['Current_Associations'] || 'Sin asociación vigente'}}</div></div>
+          <div class="detail-item"><span class="secondary-cell">Historial de asociaciones</span><div>{{d['Historical_Associations'] || 'Sin historial'}}</div></div>
+          <div class="detail-item"><span class="secondary-cell">Registro / activación</span><div>{{(d['Created_At'] || d['Activated_At']) | mexicoDate}}</div></div>
+          <div class="detail-item"><span class="secondary-cell">Última validación</span><div>{{d['Last_Validation_At'] ? (d['Last_Validation_At'] | mexicoDate) : 'Sin validaciones'}}</div></div>
         </div>
         <footer><button pButton type="button" class="secondary" (click)="detail.set(null)">Cerrar</button></footer>
       }

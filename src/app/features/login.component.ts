@@ -17,15 +17,15 @@ import { ThemeService } from '../core/theme.service';
       {{ theme.mode() === 'dark' ? '☀' : '☾' }}
     </button>
     <form class="card" [formGroup]="requiredForm" (ngSubmit)="changeRequired()" [hidden]="!mustChange()">
-      <div class="brand">LC</div><h1>Crea una nueva contraseña</h1><p>Debes actualizar la contraseña temporal antes de continuar.</p>
+      <div class="brand">CM</div><h1>Crea una nueva contraseña</h1><p>Debes actualizar la contraseña temporal antes de continuar.</p>
       <label>Contraseña temporal <span class="required-marker">*</span><input type="password" formControlName="currentPassword" autocomplete="current-password" /></label>
       <label>Nueva contraseña <span class="required-marker">*</span><input type="password" formControlName="newPassword" autocomplete="new-password" /></label>
       <label>Confirmar contraseña <span class="required-marker">*</span><input type="password" formControlName="confirmation" autocomplete="new-password" /></label>
       <button [disabled]="requiredForm.invalid || loading()">Actualizar contraseña</button>
     </form>
-    <form class="card" [formGroup]="form" (ngSubmit)="submit()" [hidden]="mustChange()">
-      <div class="brand">LC</div>
-      <h1>License Control</h1>
+    <form class="card" [formGroup]="form" (ngSubmit)="submit()" [hidden]="mustChange() || recovery()">
+      <div class="brand">CM</div>
+      <h1>Central Manager</h1>
       <p>Administración central de accesos y licencias</p>
       <label>Usuario <span class="required-marker" aria-hidden="true">*</span><input formControlName="username" autocomplete="username" /></label
       ><label
@@ -35,7 +35,13 @@ import { ThemeService } from '../core/theme.service';
           autocomplete="current-password" /></label
       ><button [disabled]="form.invalid || loading()">
         Iniciar sesión
-      </button>
+      </button><button class="text-button" type="button" (click)="openRecovery()">¿Olvidaste tu contraseña?</button>
+    </form>
+    <form class="card" [formGroup]="recoveryForm" (ngSubmit)="requestReset()" [hidden]="!recovery() || mustChange()">
+      <div class="brand">CM</div><h1>Recuperar contraseña</h1><p>Ingresa tu usuario o correo. Si la cuenta es válida, recibirás una contraseña temporal.</p>
+      <label for="recoveryIdentifier">Usuario o correo <span class="required-marker" aria-hidden="true">*</span><input id="recoveryIdentifier" formControlName="identifier" autocomplete="username" [attr.aria-invalid]="recoveryForm.controls.identifier.touched && recoveryForm.controls.identifier.invalid" /></label>
+      <button [disabled]="recoveryForm.invalid || loading()">Enviar contraseña temporal</button>
+      <button class="text-button" type="button" (click)="recovery.set(false)">Volver al inicio de sesión</button>
     </form>
   </main>`,
   styles: [
@@ -93,6 +99,7 @@ import { ThemeService } from '../core/theme.service';
         font-weight: 700;
         cursor: pointer;
       }
+      form button.text-button { margin-top: 10px; background: transparent; color: var(--primary); }
       .theme {
         position: absolute;
         top: 22px;
@@ -116,6 +123,7 @@ export class LoginComponent {
   theme = inject(ThemeService);
   loading = signal(false);
   mustChange = signal(false);
+  recovery = signal(false);
   form = new FormGroup({
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -125,6 +133,16 @@ export class LoginComponent {
     newPassword: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(8)] }),
     confirmation: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
+  recoveryForm = new FormGroup({ identifier: new FormControl('', { nonNullable: true, validators: [Validators.required] }) });
+  openRecovery() { this.recoveryForm.controls.identifier.setValue(this.form.controls.username.value); this.recovery.set(true); }
+  requestReset() {
+    if (this.recoveryForm.invalid || this.loading()) { this.recoveryForm.markAllAsTouched(); return; }
+    this.loading.set(true);
+    this.a.requestPasswordReset(this.recoveryForm.controls.identifier.value.trim()).subscribe({
+      next: result => { this.loading.set(false); this.recovery.set(false); this.recoveryForm.reset(); void this.alerts.success('Solicitud procesada', result.message); },
+      error: () => { this.loading.set(false); this.recovery.set(false); this.recoveryForm.reset(); void this.alerts.success('Solicitud procesada', 'Si los datos corresponden a una cuenta registrada, recibirás instrucciones en el correo configurado.'); }
+    });
+  }
   submit() {
     if (this.form.invalid || this.loading()) return;
     this.loading.set(true);

@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
@@ -8,10 +7,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { AlertService } from '../core/alert.service';
 import { ApiService } from '../core/api.service';
+import { licenseOwner } from '../core/license-owner';
+import { MexicoDatePipe } from '../core/mexico-date.pipe';
 
 @Component({
   standalone: true,
-  imports: [ButtonModule, DatePipe, DialogModule, FormsModule, InputTextModule, RouterLink, TableModule],
+  imports: [ButtonModule, MexicoDatePipe, DialogModule, FormsModule, InputTextModule, RouterLink, TableModule],
   template: `
     <div class="page-heading">
       <div><h1>Códigos de activación</h1><p>DEVICE_ONLY: el cupo se valida al completar la activación.</p></div>
@@ -28,7 +29,7 @@ import { ApiService } from '../core/api.service';
         <ng-template #body let-c><tr>
           <td class="main-cell" [title]="c['Id_License']">{{licenseReference(c)}}</td><td>{{c['Customer_Name'] || 'Sin cliente'}}</td><td>{{c['System_Name']}}</td>
           <td><span class="status-badge" [class.active]="codeStatus(c)==='PENDING'">{{codeStatusLabel(c)}}</span></td>
-          <td>{{c['Expires_At'] | date:'dd/MM/yyyy HH:mm'}}</td><td>{{c['Used_At'] ? (c['Used_At'] | date:'dd/MM/yyyy HH:mm') : 'No'}}</td><td>{{c['Display_Name'] || 'Sin asignar'}}</td><td>{{c['Created_At'] | date:'dd/MM/yyyy HH:mm'}}</td>
+          <td>{{c['Expires_At'] | mexicoDate}}</td><td>{{c['Used_At'] ? (c['Used_At'] | mexicoDate) : 'No'}}</td><td>{{c['Display_Name'] || 'Sin asignar'}}</td><td>{{c['Created_At'] | mexicoDate}}</td>
         </tr></ng-template>
         <ng-template #emptymessage><tr><td colspan="8"><div class="empty-state">No hay códigos que coincidan con los filtros.</div></td></tr></ng-template>
       </p-table>
@@ -39,7 +40,7 @@ import { ApiService } from '../core/api.service';
         <div class="dialog-heading"><div><h2>Generar código de activación</h2><p>El código es de un solo uso y no reserva cupo.</p></div><button pButton type="button" class="icon-button secondary" aria-label="Cerrar" (click)="closeGenerator()"><i class="pi pi-times"></i></button></div>
         <div class="grid">
           <section class="form-section"><h3>Generación</h3><div class="grid">
-          <label class="full-width">Licencia <span class="required-marker" aria-hidden="true">*</span><select name="license" [(ngModel)]="license" (ngModelChange)="licenseChanged()" required><option value="">Selecciona</option>@for(e of licenses();track e['Id_License']){@if(e['Effective_Status']==='ACTIVE'){<option [value]="e['Id_License']">{{e['Customer_Name']}} · {{e['System_Name']}} · {{e['Available_Seats']}} disponibles</option>}}</select></label>
+          <label class="full-width">Licencia <span class="required-marker" aria-hidden="true">*</span><select name="license" [(ngModel)]="license" (ngModelChange)="licenseChanged()" required><option value="">Selecciona</option>@for(e of licenses();track e['Id_License']){@if(e['Effective_Status']==='ACTIVE'){<option [value]="e['Id_License']">{{owner(e)}} · {{e['System_Name']}} · {{e['Available_Seats']}} disponibles</option>}}</select></label>
           <label>Cantidad <span class="required-marker" aria-hidden="true">*</span><input pInputText type="number" name="quantity" [(ngModel)]="quantity" min="1" [max]="availableSeats()" step="1" required /></label>
           <label>Expiración (hora local) <span class="required-marker" aria-hidden="true">*</span><input pInputText type="datetime-local" name="expires" [(ngModel)]="expires" required /></label>
           @if(selectedLicense(); as selected){<div class="full-width seat-summary"><span>Adquiridos: <strong>{{selected['Seat_Count']}}</strong></span><span>En uso: <strong>{{selected['Used_Seats']}}</strong></span><span>Disponibles: <strong>{{availableSeats()}}</strong></span></div>}
@@ -54,7 +55,7 @@ import { ApiService } from '../core/api.service';
       @if(issued(); as result){<div aria-live="polite">
         <div class="dialog-heading"><div><h2>Código generado</h2><p>Entrégalo de forma segura. Solo se muestra ahora.</p></div><button pButton type="button" class="icon-button secondary" aria-label="Cerrar" (click)="issued.set(null)"><i class="pi pi-times"></i></button></div>
         @for(code of result['codes'];track $index){<code class="result-code">{{code}}</code>}
-        <div class="detail-list"><div><span class="secondary-cell">Sistema</span><div>{{result['system']}}</div></div><div><span class="secondary-cell">Vence</span><div>{{result['expiresAt'] | date:'dd/MM/yyyy HH:mm'}}</div></div></div>
+        <div class="detail-list"><div><span class="secondary-cell">Sistema</span><div>{{result['system']}}</div></div><div><span class="secondary-cell">Vence</span><div>{{result['expiresAt'] | mexicoDate}}</div></div></div>
         <footer><button pButton type="button" class="secondary" (click)="issued.set(null)">Cerrar</button></footer>
       </div>}
     </p-dialog>
@@ -90,6 +91,7 @@ export class EnrollmentCodesComponent {
   load() { this.api.get<Record<string, any>[]>('/admin/enrollment-codes').subscribe({next: r => this.codes.set(r), error: e => this.error(e)}); }
   expired(value: string) { return new Date(value).getTime() <= Date.now(); }
   selectedLicense() { return this.licenses().find(e => e['Id_License'] === this.license); }
+  owner(value: Record<string, any>) { return licenseOwner(value); }
   availableSeats() { return Number(this.selectedLicense()?.['Available_Seats'] || 0); }
   licenseChanged() { if (this.quantity > this.availableSeats()) this.quantity = Math.max(1, this.availableSeats()); }
   codeStatus(c: Record<string, any>) { return c['Used_At'] ? 'USED' : c['License_Status'] === 'REVOKED' ? 'REVOKED' : this.expired(c['Expires_At']) ? 'EXPIRED' : 'PENDING'; }

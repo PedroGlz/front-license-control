@@ -7,7 +7,7 @@ import { AuthService } from '../core/auth.service';
 @Component({
   selector:'app-user-security',standalone:true,imports:[ButtonModule],styleUrls:['./user-detail.scss'],
   template:`<section class="user-card"><h2>Recuperación de contraseña</h2>
-    @if(!superAdmin()){<p>Solo un Super Administrador de License Control puede restablecer contraseñas.</p>}
+    @if(!superAdmin()){<p>Solo un Super Administrador de Central Manager puede restablecer contraseñas.</p>}
     @else {
       @if(currentRequest();as request){<div class="detail-list"><div><span>Estado</span><strong>{{statusLabel(request)}}</strong></div><div><span>Sistema</span><strong>{{request['Requested_System']}}</strong></div><div><span>Creada</span><strong>{{mexicoDate(request['Created_At'])}}</strong></div><div><span>Vence</span><strong>{{mexicoDate(request['Expires_At'])}}</strong></div></div>}
       @else {<p>No existe una solicitud de recuperación. El usuario debe crearla desde «¿Olvidaste tu contraseña?».</p>}

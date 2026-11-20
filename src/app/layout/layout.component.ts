@@ -16,7 +16,7 @@ import Swal from 'sweetalert2';
       (click)="open.set(false)"
     ></button>
     <aside [class.open]="open()">
-      <div class="logo"><b>LC</b><span>License Control</span></div>
+      <div class="logo"><b>CM</b><span>Central Manager</span></div>
       @for (g of menu; track g.title) {
         <h3>{{ g.title }}</h3>
         @for (i of g.items; track i.path) {

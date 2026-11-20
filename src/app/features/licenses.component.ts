@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -8,10 +7,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { AlertService } from '../core/alert.service';
 import { ApiService } from '../core/api.service';
+import { licenseOwner } from '../core/license-owner';
+import { MexicoDatePipe } from '../core/mexico-date.pipe';
 
 @Component({
   standalone: true,
-  imports: [ButtonModule, DatePipe, DialogModule, FormsModule, InputTextModule, RouterLink, TableModule],
+  imports: [ButtonModule, MexicoDatePipe, DialogModule, FormsModule, InputTextModule, RouterLink, TableModule],
   template: `
     <div class="page-heading">
       <div><h1>Licencias Android</h1><p>Licencias por usuario o cliente, con vigencia calculada por el servidor.</p></div>
@@ -28,7 +29,7 @@ import { ApiService } from '../core/api.service';
         <ng-template #body let-l><tr>
           <td class="main-cell">{{l['System_Name']}}</td><td>{{modeLabel(l['Licensing_Mode'])}}</td><td>{{owner(l)}}</td><td>{{term(l['Term_Type'])}}</td>
           <td><span class="status-badge" [class.active]="l['Effective_Status']==='ACTIVE'">{{status(l['Effective_Status'])}}</span></td>
-          <td>{{l['Seat_Count']}}</td><td>{{l['Used_Seats']}}</td><td>{{l['Available_Seats']}}</td><td>{{l['Activated_At'] | date:'dd/MM/yyyy HH:mm'}}</td><td>{{l['Expires_At'] ? (l['Expires_At'] | date:'dd/MM/yyyy HH:mm') : 'Sin vencimiento'}}</td>
+          <td>{{l['Seat_Count']}}</td><td>{{l['Used_Seats']}}</td><td>{{l['Available_Seats']}}</td><td>{{l['Activated_At'] | mexicoDate}}</td><td>{{l['Expires_At'] ? (l['Expires_At'] | mexicoDate) : 'Sin vencimiento'}}</td>
           <td><div class="actions-cell">
             <button pButton type="button" class="icon-button secondary" aria-label="Ver detalle" title="Ver detalle" (click)="show(l)"><i class="pi pi-eye"></i></button>
             @if(l['Effective_Status']==='ACTIVE'){<button pButton type="button" class="icon-button secondary" aria-label="Suspender" title="Suspender" [disabled]="busy()" (click)="change(l,'SUSPENDED')"><i class="pi pi-pause"></i></button>}
@@ -66,7 +67,7 @@ import { ApiService } from '../core/api.service';
         <section class="form-section"><div class="detail-list"><div><span class="secondary-cell">Titular</span><div>{{d['Id_Customer'] ? 'Cliente' : 'Usuario'}} · {{owner(d)}}</div></div><div><span class="secondary-cell">Modalidad y vigencia</span><div>{{modeLabel(d['Licensing_Mode'])}} · {{term(d['Term_Type'])}}</div></div><div><span class="secondary-cell">Dispositivos autorizados</span><div>{{d['Seat_Count']}}</div></div><div><span class="secondary-cell">Estado</span><div>{{status(d['Effective_Status'])}}</div></div></div></section>
         @if(d['Effective_Status']==='ACTIVE' && d['Licensing_Mode']==='DEVICE_ONLY'){<section class="form-section"><a class="action-link" routerLink="/codigos-activacion" [queryParams]="{license:d['Id_License']}">Generar código de activación</a><p class="secondary-cell">Generar códigos no reserva cupo.</p></section>}
         @if(d['Licensing_Mode']==='USER_DEVICE' && d['Effective_Status']==='ACTIVE'){<section class="form-section"><label>Dispositivo registrado<select [(ngModel)]="selectedDevice"><option value="">Selecciona</option>@for(device of devices();track device['id']){@if(device['Status']==='ACTIVE'){<option [value]="device['id']">{{device['label']}}</option>}}</select></label><button pButton type="button" [disabled]="!selectedDevice || busy() || d['Available_Seats']<1" (click)="link(d)">Vincular dispositivo</button></section>}
-        <div class="detail-list">@for(device of d['devices'];track device['Id_License_Device']){<article class="detail-item"><strong>{{device['Display_Name'] || device['Model'] || 'Dispositivo'}}</strong><p>{{device['Manufacturer']}} {{device['Model']}} · Android {{device['Android_Version']}} · APK {{device['App_Version']}}</p><p>Vínculo: {{status(device['License_Status'])}} · Dispositivo: {{status(device['Status'])}}</p><p>Activación: {{device['Activated_At'] | date:'dd/MM/yyyy HH:mm'}} · Última validación: {{device['Last_Validation_At'] ? (device['Last_Validation_At'] | date:'dd/MM/yyyy HH:mm') : 'Sin validaciones'}}</p></article>}@empty{<div class="empty-state">Aún no hay dispositivos vinculados.</div>}</div>
+        <div class="detail-list">@for(device of d['devices'];track device['Id_License_Device']){<article class="detail-item"><strong>{{device['Display_Name'] || device['Model'] || 'Dispositivo'}}</strong><p>{{device['Manufacturer']}} {{device['Model']}} · Android {{device['Android_Version']}} · APK {{device['App_Version']}}</p><p>Vínculo: {{status(device['License_Status'])}} · Dispositivo: {{status(device['Status'])}}</p><p>Activación: {{device['Activated_At'] | mexicoDate}} · Última validación: {{device['Last_Validation_At'] ? (device['Last_Validation_At'] | mexicoDate) : 'Sin validaciones'}}</p></article>}@empty{<div class="empty-state">Aún no hay dispositivos vinculados.</div>}</div>
         <footer><button pButton type="button" class="secondary" (click)="detail.set(null)">Cerrar</button></footer>
       }
     </p-dialog>
@@ -104,7 +105,7 @@ export class LicensesComponent {
   }
   mode() { return this.systems().find(s => s['id'] === this.model['Id_System'])?.['Licensing_Mode'] || ''; }
   modeLabel(value: string) { return value === 'USER_DEVICE' ? 'Usuario y dispositivo' : value === 'DEVICE_ONLY' ? 'Solo dispositivo' : value; }
-  owner(l: Record<string, any>) { return l['Id_Customer'] ? (l['Customer_Name'] || 'Sin cliente') : (l['User_Name'] || 'Sin usuario'); }
+  owner(l: Record<string, any>) { return licenseOwner(l); }
   termSummary() { return ({MONTHLY: 'Un mes desde la activación', ANNUAL: 'Un año desde la activación', PERPETUAL: 'Permanente'} as Record<string, string>)[this.model['Term_Type']] || ''; }
   systemChanged() { if (this.mode() === 'DEVICE_ONLY') { this.ownerType = 'CUSTOMER'; this.model['Id_User'] = ''; } }
   ownerTypeChanged() { if (this.ownerType === 'CUSTOMER') this.model['Id_User'] = ''; else this.model['Id_Customer'] = ''; }
