@@ -46,7 +46,7 @@ import { ThemeService } from '../core/theme.service';
       <label for="recoveryIdentifier">Usuario o correo <span class="required-marker" aria-hidden="true">*</span><input id="recoveryIdentifier" formControlName="identifier" autocomplete="username" [attr.aria-invalid]="recoveryForm.controls.identifier.touched && recoveryForm.controls.identifier.invalid" /></label>
       @if(recoveryForm.controls.identifier.touched && recoveryForm.controls.identifier.invalid){<small class="field-error">Ingresa tu usuario o correo.</small>}
       <p class="cooldown-note">Por seguridad, solo se procesa una recuperación cada 15 minutos entre los portales. Si ya la solicitaste, revisa el primer correo o vuelve a intentarlo después.</p>
-      <button [disabled]="recoveryForm.invalid || loading()">{{loading() ? 'Procesando solicitud…' : 'Solicitar recuperación'}}</button>
+      <button [disabled]="recoveryForm.invalid || loading()">{{loading() ? 'Procesando solicitud…' : 'Recuperar contraseña'}}</button>
       <button class="text-button" type="button" (click)="recovery.set(false)">Volver al inicio de sesión</button>
     </form>
   </main>`,
@@ -135,6 +135,8 @@ import { ThemeService } from '../core/theme.service';
   ],
 })
 export class LoginComponent {
+  private static readonly ACCEPTED_MESSAGE = 'Recibimos tu solicitud para procesamiento. Revisa el correo asociado a la cuenta. El mensaje puede tardar unos minutos en llegar.';
+  private static readonly RATE_LIMITED_MESSAGE = 'Ya recibimos una solicitud de restablecimiento recientemente. Espera 15 minutos antes de volver a intentarlo. Revisa el correo asociado a la cuenta.';
   private a = inject(AuthService);
   private r = inject(Router);
   theme = inject(ThemeService);
@@ -158,11 +160,10 @@ export class LoginComponent {
     if (this.recoveryForm.invalid || this.loading()) { this.recoveryForm.markAllAsTouched(); return; }
     this.loading.set(true);
     this.a.requestPasswordReset(this.recoveryForm.controls.identifier.value.trim()).subscribe({
-      next: result => { this.loading.set(false); if(result.status==='ACCEPTED'){this.recovery.set(false);this.recoveryForm.reset();this.noticeType.set('info');this.notice.set(result.message);}else if(result.status==='RATE_LIMITED'){this.noticeType.set('warning');this.notice.set(`${result.message} ${this.waitText(result.retryAfterSeconds)}`);}else{this.noticeType.set('error');this.notice.set(result.message);} },
+      next: result => { this.loading.set(false); if(result.status==='ACCEPTED'){this.recovery.set(false);this.recoveryForm.reset();this.noticeType.set('info');this.notice.set(LoginComponent.ACCEPTED_MESSAGE);}else if(result.status==='RATE_LIMITED'){this.noticeType.set('warning');this.notice.set(LoginComponent.RATE_LIMITED_MESSAGE);}else{this.noticeType.set('error');this.notice.set(result.message || 'No fue posible procesar la solicitud. Intenta nuevamente más tarde.');} },
       error: () => { this.loading.set(false); this.noticeType.set('error');this.notice.set('No fue posible procesar la solicitud. Intenta nuevamente más tarde.'); }
     });
   }
-  private waitText(seconds:number){const value=Math.max(1,Math.ceil(seconds));return value>=60?`Intenta nuevamente en ${Math.ceil(value/60)} min.`:`Intenta nuevamente en ${value} s.`;}
   submit() {
     if (this.form.invalid || this.loading()) return;
     this.loading.set(true);
