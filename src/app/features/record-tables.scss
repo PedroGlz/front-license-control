@@ -5,7 +5,7 @@
 .main-cell { font-weight: 650; }
 .secondary-cell { color: var(--text-secondary); font-size: .82rem; }
 .cell-wrap { max-width: 18rem; overflow-wrap: anywhere; }
-.actions-cell { display: flex; align-items: center; justify-content: center; gap: .1rem; white-space: nowrap; }
+.actions-cell { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: .5rem; white-space: nowrap; }
 .form-section { grid-column: 1 / -1; border: 1px solid var(--border); border-radius: var(--p-content-border-radius); padding: 1rem; }
 .form-section h3 { margin: 0 0 1rem; }
 .full-width { grid-column: 1 / -1; }

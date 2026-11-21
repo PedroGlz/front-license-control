@@ -68,6 +68,14 @@
   .etic-table tr { background: var(--surface); }
   .etic-table tbody tr:nth-child(even), tbody tr:nth-child(even) { background: var(--surface-alt); }
   .etic-table tbody tr:hover, tbody tr:hover { background: var(--surface-hover); }
+  .etic-table tbody tr.p-highlight > td, .p-datatable-tbody > tr.p-highlight > td { background: var(--primary-soft); color: var(--text); }
+  .etic-table td .actions, td .actions, td:last-child { gap: .5rem; }
+  .etic-table td:last-child > button + button, td:last-child > button + button { margin-inline-start: .5rem; }
+  .p-datatable-header, .p-paginator { background: var(--surface); color: var(--text); border-color: var(--border); }
+  .p-paginator { display: flex; flex-wrap: wrap; gap: .25rem; padding: .75rem 1rem; }
+  .p-paginator button, .p-paginator .p-select { color: var(--text); }
+  .p-paginator button:not(:disabled):hover { background: var(--surface-hover); }
+  .p-paginator button.p-paginator-page-selected { background: var(--primary-soft); color: var(--primary); }
   td:last-child:has(button.icon-button) { white-space: nowrap; width: 110px; text-align: center; }
   .empty { padding: 3rem 1rem; text-align: center; color: var(--text-secondary); }
   .etic-dialog { background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: 0 24px 65px rgba(22, 52, 76, .2); }
@@ -75,6 +83,7 @@
   .etic-dialog form { background: transparent; border: 0; padding: 0; }
   .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
   .dialog-heading h2 { margin: 0; color: var(--etic-heading); }
+  .p-dialog-footer, .dialog-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: .65rem; border-top-color: var(--border); }
   .hash-cell { display: block; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: monospace; font-size: .8rem; }
 }
 html.app-dark .shell > section > main {
