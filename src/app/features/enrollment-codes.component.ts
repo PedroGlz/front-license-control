@@ -15,7 +15,7 @@ import { MexicoDatePipe } from '../core/mexico-date.pipe';
   imports: [ButtonModule, MexicoDatePipe, DialogModule, FormsModule, InputTextModule, RouterLink, TableModule],
   template: `
     <div class="page-heading">
-      <div><h1>Códigos de activación</h1><p>DEVICE_ONLY: el cupo se valida al completar la activación.</p></div>
+      <div><h1>Códigos de activación</h1><p>Consulta y genera códigos para vincular dispositivos con licencias disponibles.</p></div>
       <button pButton type="button" (click)="generating.set(true)"><i class="pi pi-plus"></i> Generar códigos</button>
     </div>
 
@@ -23,9 +23,10 @@ import { MexicoDatePipe } from '../core/mexico-date.pipe';
       <div class="table-tools"><div class="table-filters">
         <input pInputText aria-label="Buscar códigos" placeholder="Buscar por licencia, cliente, sistema o dispositivo" [ngModel]="search()" (ngModelChange)="search.set($event)" />
         <select aria-label="Filtrar por estado" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)"><option value="">Todos los estados</option><option value="PENDING">Pendientes</option><option value="USED">Usados</option><option value="EXPIRED">Vencidos</option><option value="REVOKED">Revocados</option></select>
-      </div><a routerLink="/licencias">Ver licencias</a></div>
+        <a pButton class="secondary" routerLink="/licencias"><i class="pi pi-id-card"></i> Ver licencias</a>
+      </div></div>
       <p-table [value]="filteredCodes()" styleClass="etic-table" [scrollable]="true">
-        <ng-template #header><tr><th>Licencia</th><th>Cliente</th><th>Sistema</th><th>Estado</th><th>Expira</th><th>Usado</th><th>Dispositivo</th><th>Creado</th></tr></ng-template>
+        <ng-template #header><tr><th>Licencia <p-columnFilter field="Id_License" type="text" display="menu" matchMode="startsWith" /></th><th>Cliente <p-columnFilter field="Customer_Name" type="text" display="menu" matchMode="contains" /></th><th>Sistema <p-columnFilter field="System_Name" type="text" display="menu" matchMode="contains" /></th><th>Estado <p-columnFilter field="Code_Status" display="menu" matchMode="equals"><ng-template #filter let-value let-filter="filterCallback"><select aria-label="Filtrar estado del código" [ngModel]="value" (ngModelChange)="filter($event)"><option value="">Todos</option><option value="PENDING">Pendiente</option><option value="USED">Usado</option><option value="EXPIRED">Vencido</option><option value="REVOKED">Revocado</option></select></ng-template></p-columnFilter></th><th>Expira <p-columnFilter field="Expires_At" display="menu" matchMode="startsWith"><ng-template #filter let-value let-filter="filterCallback"><input type="date" aria-label="Filtrar expiración" [ngModel]="value" (ngModelChange)="filter($event)" /></ng-template></p-columnFilter></th><th>Usado <p-columnFilter field="Used_At" display="menu" matchMode="startsWith"><ng-template #filter let-value let-filter="filterCallback"><input type="date" aria-label="Filtrar fecha de uso" [ngModel]="value" (ngModelChange)="filter($event)" /></ng-template></p-columnFilter></th><th>Dispositivo <p-columnFilter field="Display_Name" type="text" display="menu" matchMode="contains" /></th><th>Creado <p-columnFilter field="Created_At" display="menu" matchMode="startsWith"><ng-template #filter let-value let-filter="filterCallback"><input type="date" aria-label="Filtrar fecha de creación" [ngModel]="value" (ngModelChange)="filter($event)" /></ng-template></p-columnFilter></th></tr></ng-template>
         <ng-template #body let-c><tr>
           <td class="main-cell" [title]="c['Id_License']">{{licenseReference(c)}}</td><td>{{c['Customer_Name'] || 'Sin cliente'}}</td><td>{{c['System_Name']}}</td>
           <td><span class="status-badge" [class.active]="codeStatus(c)==='PENDING'">{{codeStatusLabel(c)}}</span></td>
@@ -81,7 +82,7 @@ export class EnrollmentCodesComponent {
     return this.codes().filter(c => {
       const matchesText = !query || [c['Id_License'], c['Customer_Name'], c['System_Name'], c['Display_Name']].some(v => String(v || '').toLocaleLowerCase().includes(query));
       return matchesText && (!this.statusFilter() || this.codeStatus(c) === this.statusFilter());
-    });
+    }).map(c => ({...c, Code_Status: this.codeStatus(c)}));
   });
 
   constructor() {

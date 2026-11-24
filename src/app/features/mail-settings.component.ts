@@ -10,15 +10,17 @@ import { ApiService } from '../core/api.service';
   imports: [ButtonModule, FormsModule, TextareaModule],
   styleUrls: ['./forms.scss'],
   styles: [`
-    .mail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.mail-grid label{display:grid;gap:.45rem}
+    .mail-panel{padding:clamp(1rem,2vw,1.5rem);margin-bottom:1.25rem}.mail-panel>h2{margin:0 0 .5rem}.mail-panel>p{margin:0 0 1.25rem}.mail-panel form{display:grid;gap:1.25rem}
+    .mail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem}.mail-grid label{display:grid;gap:.55rem}
     .systems{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}.system-card{padding:1.15rem;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
-    .system-card h3{margin:0 0 .3rem}.meta{color:var(--text-secondary);font-size:.9rem;overflow-wrap:anywhere}.card-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin-top:1rem}
+    .system-card{display:grid;align-content:start;gap:.75rem}.system-card h3,.system-card p{margin:0}.system-card h3{margin-bottom:.1rem}.meta{color:var(--text-secondary);font-size:.9rem;overflow-wrap:anywhere}.card-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;margin-top:.25rem}
     .file-input{display:grid;gap:.35rem;margin-top:1rem}.status{font-weight:700;color:var(--success)}.status.off{color:var(--text-secondary)}
-    @media(max-width:650px){.mail-grid{grid-template-columns:1fr}}
+    .mail-panel .actions{margin-top:0;padding-top:1rem}.mail-panel textarea{width:100%}
+    @media(max-width:650px){.mail-panel{padding:1rem}.mail-grid{grid-template-columns:1fr}.systems{grid-template-columns:1fr}.card-actions>*{flex:1}.file-input{margin-top:.5rem}}
   `],
   template: `
     <div class="page-heading"><div><h1>Configuración de correos</h1><p>Destinatarios de copia y guías de instalación para sistemas Android.</p></div></div>
-    <section class="panel">
+    <section class="panel mail-panel">
       <h2>Destinatarios adicionales</h2>
       <p class="meta">Escribe una dirección por línea o separada por coma. Las duplicadas se eliminan automáticamente.</p>
       <form #form="ngForm" (ngSubmit)="saveRecipients()">
@@ -29,7 +31,7 @@ import { ApiService } from '../core/api.service';
         <div class="actions"><button pButton [disabled]="busy()">Guardar destinatarios</button></div>
       </form>
     </section>
-    <section class="panel">
+    <section class="panel mail-panel">
       <h2>Guías de instalación</h2>
       <p class="meta">PDF opcional por sistema Android. Máximo 10 MB.</p>
       <div class="systems">

@@ -23,16 +23,16 @@ import { AlertService } from '../core/alert.service';
         placeholder="Buscar versión o archivo"
         [(ngModel)]="search"
         (keyup.enter)="page = 0; load()"
-      /><button pButton type="button" class="secondary" (click)="search = ''; application = ''; page = 0; rows.set([])">Limpiar</button></div></div>
+      /><button pButton type="button" class="secondary" (click)="clearFilters()">Limpiar</button></div></div>
       <p-table [value]="rows()" styleClass="etic-table" [scrollable]="true">
         <ng-template #header>
           <tr>
-            <th (click)="sortBy('Version_Name')">Versión</th>
-            <th>Archivo</th>
-            <th>Tamaño</th>
-            <th>SHA256</th>
-            <th (click)="sortBy('Created_At')">Fecha</th>
-            <th>Estatus</th>
+            <th><button type="button" class="column-sort" (click)="sortBy('Version_Name')">Versión</button><input pInputText aria-label="Filtrar versión" [(ngModel)]="filters['Version_Name']" (keyup.enter)="applyFilters()" /></th>
+            <th>Archivo<input pInputText aria-label="Filtrar archivo" [(ngModel)]="filters['Original_File_Name']" (keyup.enter)="applyFilters()" /></th>
+            <th>Tamaño<div class="range-filter"><input pInputText type="number" min="0" placeholder="Mín." aria-label="Tamaño mínimo" [(ngModel)]="filters['File_Size_Min']" (keyup.enter)="applyFilters()" /><input pInputText type="number" min="0" placeholder="Máx." aria-label="Tamaño máximo" [(ngModel)]="filters['File_Size_Max']" (keyup.enter)="applyFilters()" /></div></th>
+            <th>SHA256<input pInputText aria-label="Filtrar SHA256" [(ngModel)]="filters['Sha256']" (keyup.enter)="applyFilters()" /></th>
+            <th><button type="button" class="column-sort" (click)="sortBy('Created_At')">Fecha</button><input type="date" aria-label="Filtrar fecha" [(ngModel)]="filters['Created_At']" (ngModelChange)="applyFilters()" /></th>
+            <th>Estatus<select aria-label="Filtrar publicación" [(ngModel)]="filters['Published']" (ngModelChange)="applyFilters()"><option value="">Todos</option><option value="1">Publicada</option><option value="0">No publicada</option></select></th>
             <th>Acciones</th>
           </tr>
         </ng-template>
@@ -96,6 +96,7 @@ export class VersionsComponent {
   application = '';
   page = 0;
   search = '';
+  filters: Record<string, string> = {Version_Name: '', Original_File_Name: '', File_Size_Min: '', File_Size_Max: '', Sha256: '', Created_At: '', Published: ''};
   order = 'Created_At';
   direction = 'desc';
   sortBy(key: string) {
@@ -111,11 +112,14 @@ export class VersionsComponent {
     if (this.application)
       this.api
         .list(`systems/${this.application}/versions`, this.search, this.page, 25, {
+          ...this.filters,
           sort: this.order,
           direction: this.direction,
         })
         .subscribe((x) => this.rows.set(x));
   }
+  applyFilters() { this.page = 0; this.load(); }
+  clearFilters() { this.search = ''; this.application = ''; Object.keys(this.filters).forEach(key => this.filters[key] = ''); this.page = 0; this.rows.set([]); }
   async remove(version: any) {
     if (!(await this.alerts.confirm('¿Eliminar versión?', 'La versión será desactivada; el archivo APK se conservará.')).isConfirmed) return;
     this.api.delete(`/admin/systems/${this.application}/versions/${version.Id_Version}`).subscribe({

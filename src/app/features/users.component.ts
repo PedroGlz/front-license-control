@@ -30,6 +30,7 @@ export class UsersComponent {
   systems: { id: string; label: string }[] = [];
   search = '';
   filterType = '';
+  columnFilters: Record<string, string> = {Username: '', Name: '', Email: '', Telefono: ''};
   order = 'Username';
   direction = 'asc';
   page = signal(0);
@@ -72,11 +73,14 @@ export class UsersComponent {
     this.api
       .list('users', this.search, this.page(), 25, {
         Id_User_Type: this.filterType,
+        ...this.columnFilters,
         sort: this.order,
         direction: this.direction,
       })
       .subscribe((x) => this.users.set(x));
   }
+  applyColumnFilters() { this.page.set(0); this.load(); }
+  clearFilters() { this.search = ''; this.filterType = ''; this.columnFilters = {Username: '', Name: '', Email: '', Telefono: ''}; this.page.set(0); this.load(); }
   sortBy(key: string) {
     this.direction = this.order === key && this.direction === 'asc' ? 'desc' : 'asc';
     this.order = key;

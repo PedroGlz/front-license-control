@@ -11,20 +11,20 @@ interface AttributeOption { Id_Option?: string; Value_Code: string; Display_Name
 @Component({
   standalone: true, selector: 'app-attribute-options',
   imports: [ButtonModule, InputTextModule, DialogModule, TableModule, FormsModule, IconComponent],
-  styleUrls: ['./forms.scss', './attribute-options.component.scss'],
+  styleUrls: ['./forms.scss', './record-tables.scss', './attribute-options.component.scss'],
   template: `
     <section class="attribute-section">
       <header class="option-heading"><div><h3>Valores del atributo</h3><p>Administra los valores disponibles y sus etiquetas.</p></div>
         <button pButton type="button" (click)="open()">Agregar valor</button>
       </header>
       <p-table [value]="options()" styleClass="etic-table" [scrollable]="true">
-        <ng-template #header><tr><th>Valor</th><th>Etiqueta</th><th>Orden</th><th>Estado</th><th>Acciones</th></tr></ng-template>
+        <ng-template #header><tr><th>Valor <p-columnFilter field="Value_Code" type="text" display="menu" matchMode="startsWith" /></th><th>Etiqueta <p-columnFilter field="Display_Name" type="text" display="menu" matchMode="contains" /></th><th>Orden <p-columnFilter field="Sort_Order" type="numeric" display="menu" matchMode="equals" /></th><th>Estado <p-columnFilter field="Is_Active" display="menu" matchMode="equals"><ng-template #filter let-value let-filter="filterCallback"><select aria-label="Filtrar estado del valor" [ngModel]="value" (ngModelChange)="filter($event)"><option [ngValue]="null">Todos</option><option [ngValue]="true">Activo</option><option [ngValue]="false">Inactivo</option></select></ng-template></p-columnFilter></th><th class="actions-column">Acciones</th></tr></ng-template>
         <ng-template #body let-option><tr>
           <td>{{option.Value_Code}}</td><td>{{option.Display_Name}}</td><td>{{option.Sort_Order}}</td>
           <td><span class="badge" [class.inactive]="!option.Is_Active">{{option.Is_Active ? 'Activo' : 'Inactivo'}}</span></td>
-          <td><button pButton type="button" class="icon-button" aria-label="Editar valor" title="Editar valor" (click)="open(option)"><app-icon name="edit" /></button>
+          <td><div class="actions-cell"><button pButton type="button" class="icon-button" aria-label="Editar valor" title="Editar valor" (click)="open(option)"><app-icon name="edit" /></button>
             @if(option.Is_Active){<button pButton type="button" class="icon-button danger" aria-label="Desactivar valor" title="Desactivar valor" [disabled]="busy()" (click)="remove(option)"><app-icon name="trash" /></button>}
-            @else{<button pButton type="button" class="secondary" [disabled]="busy()" (click)="reactivate(option)">Reactivar</button>}
+            @else{<button pButton type="button" class="icon-button" aria-label="Reactivar valor" title="Reactivar valor" [disabled]="busy()" (click)="reactivate(option)"><i class="pi pi-play"></i></button>}</div>
           </td></tr></ng-template>
         <ng-template #emptymessage><tr><td colspan="5" class="empty">No hay valores registrados. Agrega el primero.</td></tr></ng-template>
       </p-table>

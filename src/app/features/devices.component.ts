@@ -12,7 +12,7 @@ import { MexicoDatePipe } from '../core/mexico-date.pipe';
   standalone: true,
   imports: [ButtonModule, MexicoDatePipe, DialogModule, FormsModule, InputTextModule, TableModule],
   template: `
-    <div class="page-heading"><div><h1>Dispositivos</h1><p>Se registran mediante enrollment. No existe alta manual.</p></div></div>
+    <div class="page-heading"><div><h1>Dispositivos</h1><p>Consulta los dispositivos vinculados a cuentas y licencias, junto con su estado de activación.</p></div></div>
 
     <section class="panel">
       <div class="table-tools"><div class="table-filters">
@@ -21,10 +21,22 @@ import { MexicoDatePipe } from '../core/mexico-date.pipe';
           <option value="">Todos los estados</option><option value="ACTIVE">Activos</option><option value="SUSPENDED">Suspendidos</option><option value="REVOKED">Revocados</option><option value="LOST">Perdidos</option><option value="REPLACED">Reemplazados</option>
         </select>
         <button pButton type="button" class="secondary" (click)="applyFilters()"><i class="pi pi-search"></i> Buscar</button>
+        <button pButton type="button" class="secondary" (click)="clearFilters()">Limpiar</button>
       </div></div>
 
       <p-table [value]="rows()" styleClass="etic-table" [scrollable]="true">
-        <ng-template #header><tr><th>Nombre</th><th>Propietario actual</th><th>Aplicación / licencia</th><th>Fabricante</th><th>Modelo</th><th>Android</th><th>APK</th><th>Estado</th><th>Activación</th><th>Última validación</th><th>Acciones</th></tr></ng-template>
+        <ng-template #header><tr>
+          <th>Nombre<input pInputText aria-label="Filtrar nombre" [(ngModel)]="filters['Display_Name']" (keyup.enter)="applyFilters()" /></th>
+          <th>Propietario actual<input pInputText aria-label="Filtrar propietario" [(ngModel)]="filters['Owner']" (keyup.enter)="applyFilters()" /></th>
+          <th>Aplicación / licencia<input pInputText aria-label="Filtrar asociación" [(ngModel)]="filters['Association']" (keyup.enter)="applyFilters()" /></th>
+          <th>Fabricante<input pInputText aria-label="Filtrar fabricante" [(ngModel)]="filters['Manufacturer']" (keyup.enter)="applyFilters()" /></th>
+          <th>Modelo<input pInputText aria-label="Filtrar modelo" [(ngModel)]="filters['Model']" (keyup.enter)="applyFilters()" /></th>
+          <th>Android<input pInputText aria-label="Filtrar versión Android" [(ngModel)]="filters['Android_Version']" (keyup.enter)="applyFilters()" /></th>
+          <th>APK<input pInputText aria-label="Filtrar versión APK" [(ngModel)]="filters['App_Version']" (keyup.enter)="applyFilters()" /></th>
+          <th>Estado<select aria-label="Filtrar estado por columna" [(ngModel)]="status" (ngModelChange)="applyFilters()"><option value="">Todos</option><option value="ACTIVE">Activo</option><option value="SUSPENDED">Suspendido</option><option value="REVOKED">Revocado</option><option value="LOST">Perdido</option><option value="REPLACED">Reemplazado</option></select></th>
+          <th>Activación<input type="date" aria-label="Filtrar fecha de activación" [(ngModel)]="filters['Activated_At']" (ngModelChange)="applyFilters()" /></th>
+          <th>Última validación<input type="date" aria-label="Filtrar última validación" [(ngModel)]="filters['Last_Validation_At']" (ngModelChange)="applyFilters()" /></th>
+          <th class="actions-column">Acciones</th></tr></ng-template>
         <ng-template #body let-d><tr>
           <td class="main-cell">{{d['Display_Name'] || 'Dispositivo sin nombre'}}</td><td>{{d['Current_Owners'] || 'Sin propietario'}}</td><td>{{d['Current_Associations'] || 'Sin asociación vigente'}}</td><td>{{d['Manufacturer'] || '—'}}</td><td>{{d['Model'] || '—'}}</td><td>{{d['Android_Version'] || '—'}}</td><td>{{d['App_Version'] || '—'}}</td>
           <td><span class="status-badge" [class.active]="d['Status']==='ACTIVE'">{{stateLabel(d['Status'])}}</span></td>
@@ -35,13 +47,13 @@ import { MexicoDatePipe } from '../core/mexico-date.pipe';
               <button pButton type="button" class="icon-button secondary" aria-label="Suspender" title="Suspender" [disabled]="busy()" (click)="changeStatus(d,'SUSPENDED')"><i class="pi pi-pause"></i></button>
               <button pButton type="button" class="icon-button secondary" aria-label="Marcar perdido" title="Marcar perdido" [disabled]="busy()" (click)="retire(d,'LOST')"><i class="pi pi-exclamation-triangle"></i></button>
               <button pButton type="button" class="icon-button secondary" aria-label="Reemplazar" title="Reemplazar" [disabled]="busy()" (click)="retire(d,'REPLACED')"><i class="pi pi-sync"></i></button>
-              <button pButton type="button" class="icon-button secondary" aria-label="Revocar" title="Revocar" [disabled]="busy()" (click)="retire(d,'REVOKED')"><i class="pi pi-ban"></i></button>
+              <button pButton type="button" class="icon-button danger" aria-label="Revocar" title="Revocar" [disabled]="busy()" (click)="retire(d,'REVOKED')"><i class="pi pi-ban"></i></button>
             }
             @if(d['Status']==='SUSPENDED'){
               <button pButton type="button" class="icon-button secondary" aria-label="Reactivar" title="Reactivar" [disabled]="busy()" (click)="changeStatus(d,'ACTIVE')"><i class="pi pi-play"></i></button>
               <button pButton type="button" class="icon-button secondary" aria-label="Marcar perdido" title="Marcar perdido" [disabled]="busy()" (click)="retire(d,'LOST')"><i class="pi pi-exclamation-triangle"></i></button>
               <button pButton type="button" class="icon-button secondary" aria-label="Reemplazar" title="Reemplazar" [disabled]="busy()" (click)="retire(d,'REPLACED')"><i class="pi pi-sync"></i></button>
-              <button pButton type="button" class="icon-button secondary" aria-label="Revocar" title="Revocar" [disabled]="busy()" (click)="retire(d,'REVOKED')"><i class="pi pi-ban"></i></button>
+              <button pButton type="button" class="icon-button danger" aria-label="Revocar" title="Revocar" [disabled]="busy()" (click)="retire(d,'REVOKED')"><i class="pi pi-ban"></i></button>
             }
           </div></td>
         </tr></ng-template>
@@ -80,10 +92,12 @@ export class DevicesComponent {
   detail = signal<Record<string, any> | null>(null);
   search = '';
   status = '';
+  filters: Record<string, string> = {Display_Name: '', Owner: '', Association: '', Manufacturer: '', Model: '', Android_Version: '', App_Version: '', Activated_At: '', Last_Validation_At: ''};
 
   constructor() { this.load(); }
-  load() { this.api.list('devices', this.search, this.page(), 25, {Status: this.status, sort: 'Activated_At', direction: 'desc'}).subscribe({next: r => this.rows.set(r), error: e => void this.alerts.error('No fue posible consultar dispositivos', this.alerts.message(e))}); }
+  load() { this.api.list('devices', this.search, this.page(), 25, {Status: this.status, ...this.filters, sort: 'Activated_At', direction: 'desc'}).subscribe({next: r => this.rows.set(r), error: e => void this.alerts.error('No fue posible consultar dispositivos', this.alerts.message(e))}); }
   applyFilters() { this.page.set(0); this.load(); }
+  clearFilters() { this.search = ''; this.status = ''; Object.keys(this.filters).forEach(key => this.filters[key] = ''); this.applyFilters(); }
   previous() { this.page.update(value => value - 1); this.load(); }
   next() { this.page.update(value => value + 1); this.load(); }
   stateLabel(value: string) { return ({ACTIVE: 'Activo', SUSPENDED: 'Suspendido', REVOKED: 'Revocado', LOST: 'Perdido', REPLACED: 'Reemplazado'} as Record<string, string>)[value] || value; }

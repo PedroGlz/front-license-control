@@ -5,7 +5,10 @@
 .main-cell { font-weight: 650; }
 .secondary-cell { color: var(--text-secondary); font-size: .82rem; }
 .cell-wrap { max-width: 18rem; overflow-wrap: anywhere; }
-.actions-cell { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: .5rem; white-space: nowrap; }
+.actions-cell { display: grid; grid-template-columns: repeat(3, 2.25rem); align-items: center; justify-content: center; gap: .35rem; width: max-content; margin-inline: auto; white-space: nowrap; }
+.actions-cell:has(> :nth-child(1):last-child) { grid-template-columns: 2.25rem; }
+.actions-cell:has(> :nth-child(2):last-child) { grid-template-columns: repeat(2, 2.25rem); }
+.actions-column { width: 8.25rem; min-width: 8.25rem; text-align: center; }
 .form-section { grid-column: 1 / -1; border: 1px solid var(--border); border-radius: var(--p-content-border-radius); padding: 1rem; }
 .form-section h3 { margin: 0 0 1rem; }
 .full-width { grid-column: 1 / -1; }
@@ -19,4 +22,5 @@
   .table-filters { width: 100%; }
   .full-width { grid-column: auto; }
   .form-section { padding: .85rem; }
+  .actions-cell { gap: .25rem; }
 }

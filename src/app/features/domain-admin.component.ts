@@ -118,12 +118,26 @@ for (const [resource, config] of Object.entries(CONFIG)) {
         @if (hasSystem()) {
           <p-select [(ngModel)]="filterSystem" (ngModelChange)="page.set(0); load()" [options]="[{id: '', label: 'Todos los sistemas'}].concat(lookups['systems'] || [])" optionLabel="label" optionValue="id" ariaLabel="Sistema" />
         }
-        <button pButton type="button" class="secondary" (click)="search = ''; filterStatus = ''; filterSystem = ''; page.set(0); load()">Limpiar</button></div></div>
+        <button pButton type="button" class="secondary" (click)="clearFilters()">Limpiar</button></div></div>
       <p-table [value]="view()" styleClass="etic-table" [scrollable]="true">
         <ng-template #header>
           <tr>
             @for (f of tableFields(); track f.key) {
-              <th (click)="sort(f.key)">{{ f.label }}</th>
+              <th><button type="button" class="column-sort" (click)="sort(f.key)">{{ f.label }}</button>
+                @if (f.key === 'Id_System') {
+                  <select [attr.aria-label]="'Filtrar ' + f.label" [(ngModel)]="filterSystem" (ngModelChange)="applyColumnFilters()"><option value="">Todos</option>@for(option of lookups['systems'] || []; track option.id){<option [value]="option.id">{{option.label}}</option>}</select>
+                } @else if (f.key === 'Status') {
+                  <select [attr.aria-label]="'Filtrar ' + f.label" [(ngModel)]="filterStatus" (ngModelChange)="applyColumnFilters()"><option value="">Todos</option>@for(option of f.options || []; track option){<option [value]="option">{{option}}</option>}</select>
+                } @else if (f.lookup) {
+                  <select [attr.aria-label]="'Filtrar ' + f.label" [(ngModel)]="columnFilters[f.key]" (ngModelChange)="applyColumnFilters()"><option value="">Todos</option>@for(option of lookups[f.lookup] || []; track option.id){<option [value]="option.id">{{option.label}}</option>}</select>
+                } @else if (f.options) {
+                  <select [attr.aria-label]="'Filtrar ' + f.label" [(ngModel)]="columnFilters[f.key]" (ngModelChange)="applyColumnFilters()"><option value="">Todos</option>@for(option of f.options; track option){<option [value]="option">{{option}}</option>}</select>
+                } @else if (f.type === 'checkbox') {
+                  <select [attr.aria-label]="'Filtrar ' + f.label" [(ngModel)]="columnFilters[f.key]" (ngModelChange)="applyColumnFilters()"><option value="">Todos</option><option value="1">Sí</option><option value="0">No</option></select>
+                } @else {
+                  <input pInputText [type]="f.type === 'number' ? 'number' : 'text'" [attr.aria-label]="'Filtrar ' + f.label" [(ngModel)]="columnFilters[f.key]" (keyup.enter)="applyColumnFilters()" />
+                }
+              </th>
             }
             <th>Acciones</th>
           </tr>
@@ -450,6 +464,7 @@ export class DomainAdminComponent {
   private route = inject(ActivatedRoute);
   filterStatus = '';
   filterSystem = '';
+  columnFilters: Record<string,string> = {};
   direction = 'asc';
   cfg = CONFIG['systems'];
   resource = 'systems';
@@ -464,6 +479,7 @@ export class DomainAdminComponent {
     this.route.data.subscribe((d) => {
       this.resource = d['domain'];
       this.cfg = CONFIG[this.resource];
+      this.columnFilters = {}; this.filterStatus = ''; this.filterSystem = ''; this.page.set(0);
       for (const f of this.cfg.fields)
         if (f.lookup)
           this.api.get<any[]>(`/admin/lookups/${f.lookup}`).subscribe((x) => {
@@ -482,6 +498,7 @@ export class DomainAdminComponent {
       .list(this.resource, this.search, this.page(), 25, {
         Status: this.filterStatus,
         Id_System: this.filterSystem,
+        ...this.columnFilters,
         sort: this.order || this.cfg.id,
         direction: this.direction,
       })
@@ -490,6 +507,8 @@ export class DomainAdminComponent {
         error: (e) => void this.alerts.error('Error al consultar', this.alerts.message(e)),
       });
   }
+  applyColumnFilters(){this.page.set(0);this.load();}
+  clearFilters(){this.search='';this.filterStatus='';this.filterSystem='';this.columnFilters={};this.page.set(0);this.load();}
   view() {
     return this.rows();
   }

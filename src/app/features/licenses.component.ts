@@ -15,7 +15,7 @@ import { MexicoDatePipe } from '../core/mexico-date.pipe';
   imports: [ButtonModule, MexicoDatePipe, DialogModule, FormsModule, InputTextModule, RouterLink, TableModule],
   template: `
     <div class="page-heading">
-      <div><h1>Licencias Android</h1><p>Licencias por usuario o cliente, con vigencia calculada por el servidor.</p></div>
+      <div><h1>Licencias Android</h1><p>Administra titulares, vigencias y capacidad disponible de las licencias.</p></div>
       <button pButton type="button" (click)="creating.set(true)"><i class="pi pi-plus"></i> Nueva licencia</button>
     </div>
 
@@ -25,7 +25,7 @@ import { MexicoDatePipe } from '../core/mexico-date.pipe';
         <select aria-label="Filtrar por estado" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)"><option value="">Todos los estados</option><option value="ACTIVE">Activas</option><option value="SUSPENDED">Suspendidas</option><option value="REVOKED">Revocadas</option><option value="EXPIRED">Vencidas</option></select>
       </div></div>
       <p-table [value]="filteredRows()" styleClass="etic-table" [scrollable]="true">
-        <ng-template #header><tr><th>Sistema</th><th>Modalidad</th><th>Usuario / cliente</th><th>Vigencia</th><th>Estado</th><th>Dispositivos</th><th>En uso</th><th>Disponibles</th><th>Activada</th><th>Vence</th><th>Acciones</th></tr></ng-template>
+        <ng-template #header><tr><th>Sistema <p-columnFilter field="System_Name" type="text" display="menu" matchMode="contains" /></th><th>Modalidad <p-columnFilter field="Licensing_Mode" display="menu" matchMode="equals"><ng-template #filter let-value let-filter="filterCallback"><select aria-label="Filtrar modalidad" [ngModel]="value" (ngModelChange)="filter($event)"><option value="">Todas</option><option value="USER_DEVICE">Usuario y dispositivo</option><option value="DEVICE_ONLY">Solo dispositivo</option></select></ng-template></p-columnFilter></th><th>Usuario / cliente <p-columnFilter field="Owner_Label" type="text" display="menu" matchMode="contains" /></th><th>Vigencia <p-columnFilter field="Term_Type" display="menu" matchMode="equals"><ng-template #filter let-value let-filter="filterCallback"><select aria-label="Filtrar vigencia" [ngModel]="value" (ngModelChange)="filter($event)"><option value="">Todas</option><option value="MONTHLY">Mensual</option><option value="ANNUAL">Anual</option><option value="PERPETUAL">Permanente</option></select></ng-template></p-columnFilter></th><th>Estado <p-columnFilter field="Effective_Status" display="menu" matchMode="equals"><ng-template #filter let-value let-filter="filterCallback"><select aria-label="Filtrar estado de licencia" [ngModel]="value" (ngModelChange)="filter($event)"><option value="">Todos</option><option value="ACTIVE">Activa</option><option value="SUSPENDED">Suspendida</option><option value="REVOKED">Revocada</option><option value="EXPIRED">Vencida</option></select></ng-template></p-columnFilter></th><th>Dispositivos <p-columnFilter field="Seat_Count" type="numeric" display="menu" matchMode="equals" /></th><th>En uso <p-columnFilter field="Used_Seats" type="numeric" display="menu" matchMode="equals" /></th><th>Disponibles <p-columnFilter field="Available_Seats" type="numeric" display="menu" matchMode="equals" /></th><th>Activada <p-columnFilter field="Activated_At" display="menu" matchMode="startsWith"><ng-template #filter let-value let-filter="filterCallback"><input type="date" aria-label="Filtrar fecha de activación" [ngModel]="value" (ngModelChange)="filter($event)" /></ng-template></p-columnFilter></th><th>Vence <p-columnFilter field="Expires_At" display="menu" matchMode="startsWith"><ng-template #filter let-value let-filter="filterCallback"><input type="date" aria-label="Filtrar fecha de vencimiento" [ngModel]="value" (ngModelChange)="filter($event)" /></ng-template></p-columnFilter></th><th class="actions-column">Acciones</th></tr></ng-template>
         <ng-template #body let-l><tr>
           <td class="main-cell">{{l['System_Name']}}</td><td>{{modeLabel(l['Licensing_Mode'])}}</td><td>{{owner(l)}}</td><td>{{term(l['Term_Type'])}}</td>
           <td><span class="status-badge" [class.active]="l['Effective_Status']==='ACTIVE'">{{status(l['Effective_Status'])}}</span></td>
@@ -36,7 +36,7 @@ import { MexicoDatePipe } from '../core/mexico-date.pipe';
             @if(l['Effective_Status']==='ACTIVE'){<button pButton type="button" class="icon-button secondary" aria-label="Suspender" title="Suspender" [disabled]="busy()" (click)="change(l,'SUSPENDED')"><i class="pi pi-pause"></i></button>}
             @if(l['Effective_Status']==='SUSPENDED'){<button pButton type="button" class="icon-button secondary" aria-label="Reactivar" title="Reactivar" [disabled]="busy()" (click)="change(l,'ACTIVE')"><i class="pi pi-play"></i></button>}
             @if(l['Term_Type']!=='PERPETUAL' && l['Status']!=='REVOKED'){<button pButton type="button" class="icon-button secondary" aria-label="Renovar" title="Renovar" [disabled]="busy()" (click)="renew(l)"><i class="pi pi-calendar-plus"></i></button>}
-            @if(l['Status']!=='REVOKED'){<button pButton type="button" class="icon-button secondary" aria-label="Revocar" title="Revocar" [disabled]="busy()" (click)="change(l,'REVOKED')"><i class="pi pi-ban"></i></button>}
+            @if(l['Status']!=='REVOKED'){<button pButton type="button" class="icon-button danger" aria-label="Revocar" title="Revocar" [disabled]="busy()" (click)="change(l,'REVOKED')"><i class="pi pi-ban"></i></button>}
           </div></td>
         </tr></ng-template>
         <ng-template #emptymessage><tr><td colspan="11"><div class="empty-state">No hay licencias que coincidan con los filtros.</div></td></tr></ng-template>
@@ -109,7 +109,7 @@ export class LicensesComponent {
   model: Record<string, any> = {Id_Customer: '', Id_User: this.route.snapshot.queryParamMap.get('user') || '', Id_System: '', Term_Type: 'MONTHLY', Seat_Count: 1};
   filteredRows = computed(() => {
     const query = this.search().trim().toLocaleLowerCase();
-    return this.rows().filter(l => (!query || [l['System_Name'], this.owner(l)].some(v => String(v || '').toLocaleLowerCase().includes(query))) && (!this.statusFilter() || l['Effective_Status'] === this.statusFilter()));
+    return this.rows().filter(l => (!query || [l['System_Name'], this.owner(l)].some(v => String(v || '').toLocaleLowerCase().includes(query))) && (!this.statusFilter() || l['Effective_Status'] === this.statusFilter())).map(l => ({...l, Owner_Label: this.owner(l)}));
   });
 
   constructor() {

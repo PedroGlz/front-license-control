@@ -13,7 +13,7 @@ import { IconComponent } from '../core/icon.component';
   imports: [ButtonModule, DialogModule, FormsModule, IconComponent, InputTextModule, TableModule],
   template: `
     <div class="page-heading">
-      <div><h1>Clientes</h1><p>Propietarios comerciales de licencias DEVICE_ONLY.</p></div>
+      <div><h1>Clientes</h1><p>Administra la información de clientes y sus usuarios asociados.</p></div>
       <button pButton type="button" (click)="newCustomer()"><i class="pi pi-plus"></i> Nuevo cliente</button>
     </div>
 
@@ -27,7 +27,7 @@ import { IconComponent } from '../core/icon.component';
         </div>
       </div>
       <p-table [value]="filteredRows()" styleClass="etic-table" [scrollable]="true">
-        <ng-template #header><tr><th>Nombre</th><th>Contacto</th><th>Correo</th><th>Teléfono</th><th>Estado</th><th>Acciones</th></tr></ng-template>
+        <ng-template #header><tr><th>Nombre <p-columnFilter field="Name" type="text" display="menu" matchMode="contains" /></th><th>Contacto <p-columnFilter field="Contact_Name" type="text" display="menu" matchMode="contains" /></th><th>Correo <p-columnFilter field="Email" type="text" display="menu" matchMode="contains" /></th><th>Teléfono <p-columnFilter field="Phone" type="text" display="menu" matchMode="contains" /></th><th>Estado <p-columnFilter field="Is_Active" display="menu" matchMode="equals"><ng-template #filter let-value let-filter="filterCallback"><select aria-label="Filtrar estado de cliente" [ngModel]="value" (ngModelChange)="filter($event)"><option [ngValue]="null">Todos</option><option [ngValue]="true">Activo</option><option [ngValue]="false">Inactivo</option></select></ng-template></p-columnFilter></th><th class="actions-column">Acciones</th></tr></ng-template>
         <ng-template #body let-c><tr>
           <td class="main-cell">{{c['Name']}}</td><td>{{c['Contact_Name'] || 'Sin contacto'}}</td><td class="cell-wrap">{{c['Email'] || 'Sin correo'}}</td><td>{{c['Phone'] || 'Sin teléfono'}}</td>
           <td><span class="status-badge" [class.active]="c['Is_Active']">{{c['Is_Active'] ? 'Activo' : 'Inactivo'}}</span></td>
@@ -55,7 +55,7 @@ import { IconComponent } from '../core/icon.component';
       @if(usersCustomer(); as customer){
         <div class="dialog-heading"><div><h2>Usuarios asociados</h2><p>{{customer['Name']}}</p></div><button pButton type="button" class="icon-button secondary" aria-label="Cerrar" (click)="usersCustomer.set(null)"><i class="pi pi-times"></i></button></div>
         <div class="table-tools"><div class="table-filters"><select [(ngModel)]="selectedUser"><option value="">Selecciona un usuario</option>@for(u of availableUsers();track u['id']){<option [value]="u['id']">{{u['label']}}</option>}</select><button pButton type="button" [disabled]="!selectedUser || saving()" (click)="associate()"><i class="pi pi-plus"></i> Asociar</button></div></div>
-        <p-table [value]="customerUsers()" styleClass="etic-table"><ng-template #header><tr><th>Usuario</th><th>Nombre</th><th>Correo</th><th>Acciones</th></tr></ng-template><ng-template #body let-u><tr><td>{{u['Username']}}</td><td>{{fullName(u)}}</td><td>{{u['Email'] || 'Sin correo'}}</td><td><button pButton type="button" class="icon-button secondary" aria-label="Quitar asociación" title="Quitar" [disabled]="saving()" (click)="removeAssociation(u)"><i class="pi pi-times"></i></button></td></tr></ng-template><ng-template #emptymessage><tr><td colspan="4"><div class="empty-state">No hay usuarios asociados.</div></td></tr></ng-template></p-table>
+        <p-table [value]="customerUsersView()" styleClass="etic-table"><ng-template #header><tr><th>Usuario <p-columnFilter field="Username" type="text" display="menu" matchMode="contains" /></th><th>Nombre <p-columnFilter field="Full_Name" type="text" display="menu" matchMode="contains" /></th><th>Correo <p-columnFilter field="Email" type="text" display="menu" matchMode="contains" /></th><th class="actions-column">Acciones</th></tr></ng-template><ng-template #body let-u><tr><td>{{u['Username']}}</td><td>{{fullName(u)}}</td><td>{{u['Email'] || 'Sin correo'}}</td><td><div class="actions-cell"><button pButton type="button" class="icon-button secondary" aria-label="Quitar asociación" title="Quitar" [disabled]="saving()" (click)="removeAssociation(u)"><i class="pi pi-times"></i></button></div></td></tr></ng-template><ng-template #emptymessage><tr><td colspan="4"><div class="empty-state">No hay usuarios asociados.</div></td></tr></ng-template></p-table>
         <footer><button pButton type="button" class="secondary" (click)="usersCustomer.set(null)">Cerrar</button></footer>
       }
     </p-dialog>
@@ -72,6 +72,7 @@ export class CustomersComponent {
   statusFilter = signal('');
   usersCustomer = signal<Record<string, any> | null>(null);
   customerUsers = signal<Record<string, any>[]>([]);
+  customerUsersView = computed(() => this.customerUsers().map(user => ({...user, Full_Name: this.fullName(user)})));
   allUsers = signal<Record<string, any>[]>([]);
   selectedUser = '';
   availableUsers = computed(() => { const assigned = new Set(this.customerUsers().map(u => u['Id_User'])); return this.allUsers().filter(u => !assigned.has(u['id'])); });

@@ -4,15 +4,15 @@
           placeholder="Usuario, nombre o email"
           [(ngModel)]="search"
           (keyup.enter)="page.set(0); load()"
-        /><p-select [(ngModel)]="filterType" (ngModelChange)="page.set(0); load()" [options]="[{id: '', label: 'Todos los tipos'}].concat(types)" optionValue="id" optionLabel="label" ariaLabel="Tipo de usuario"><ng-template #item let-type>{{ labelName(type.label) }}</ng-template><ng-template #selectedItem let-type>{{ labelName(type.label) }}</ng-template></p-select><button pButton type="button" class="secondary" (click)="search = ''; filterType = ''; page.set(0); load()">Limpiar</button></div></div>
+        /><button pButton type="button" class="secondary" (click)="clearFilters()">Limpiar</button></div></div>
       <p-table [value]="users()" styleClass="etic-table" [scrollable]="true">
         <ng-template #header>
           <tr>
-            <th (click)="sortBy('Username')">Usuario</th>
-            <th (click)="sortBy('First_Name')">Nombre</th>
-            <th (click)="sortBy('Email')">Email</th>
-            <th (click)="sortBy('Telefono')">Teléfono</th>
-            <th>Tipo</th>
+            <th><button type="button" class="column-sort" (click)="sortBy('Username')">Usuario</button><input pInputText aria-label="Filtrar usuario" [(ngModel)]="columnFilters['Username']" (keyup.enter)="applyColumnFilters()" /></th>
+            <th><button type="button" class="column-sort" (click)="sortBy('First_Name')">Nombre</button><input pInputText aria-label="Filtrar nombre" [(ngModel)]="columnFilters['Name']" (keyup.enter)="applyColumnFilters()" /></th>
+            <th><button type="button" class="column-sort" (click)="sortBy('Email')">Email</button><input pInputText aria-label="Filtrar correo" [(ngModel)]="columnFilters['Email']" (keyup.enter)="applyColumnFilters()" /></th>
+            <th><button type="button" class="column-sort" (click)="sortBy('Telefono')">Teléfono</button><input pInputText aria-label="Filtrar teléfono" [(ngModel)]="columnFilters['Telefono']" (keyup.enter)="applyColumnFilters()" /></th>
+            <th>Tipo<p-select [(ngModel)]="filterType" (ngModelChange)="applyColumnFilters()" [options]="[{id: '', label: 'Todos'}].concat(types)" optionValue="id" optionLabel="label" ariaLabel="Filtrar tipo de usuario" /></th>
             <th></th>
           </tr>
         </ng-template>
