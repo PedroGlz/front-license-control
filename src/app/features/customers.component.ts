@@ -18,16 +18,8 @@ import { IconComponent } from '../core/icon.component';
     </div>
 
     <section class="panel">
-      <div class="table-tools">
-        <div class="table-filters">
-          <input pInputText aria-label="Buscar clientes" placeholder="Buscar por nombre, contacto o correo" [ngModel]="search()" (ngModelChange)="search.set($event)" />
-          <select aria-label="Filtrar por estado" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
-            <option value="">Todos los estados</option><option value="ACTIVE">Activos</option><option value="INACTIVE">Inactivos</option>
-          </select>
-        </div>
-      </div>
-      <p-table [value]="filteredRows()" styleClass="etic-table" [scrollable]="true">
-        <ng-template #header><tr><th>Nombre <p-columnFilter field="Name" type="text" display="menu" matchMode="contains" /></th><th>Contacto <p-columnFilter field="Contact_Name" type="text" display="menu" matchMode="contains" /></th><th>Correo <p-columnFilter field="Email" type="text" display="menu" matchMode="contains" /></th><th>Teléfono <p-columnFilter field="Phone" type="text" display="menu" matchMode="contains" /></th><th>Estado <p-columnFilter field="Is_Active" display="menu" matchMode="equals"><ng-template #filter let-value let-filter="filterCallback"><select aria-label="Filtrar estado de cliente" [ngModel]="value" (ngModelChange)="filter($event)"><option [ngValue]="null">Todos</option><option [ngValue]="true">Activo</option><option [ngValue]="false">Inactivo</option></select></ng-template></p-columnFilter></th><th class="actions-column">Acciones</th></tr></ng-template>
+      <p-table [value]="rows()" styleClass="etic-table" [scrollable]="true">
+        <ng-template #header><tr><th pSortableColumn="Name">Nombre <p-sortIcon field="Name" /><p-columnFilter field="Name" type="text" display="row" matchMode="contains" [showMenu]="false" /></th><th pSortableColumn="Contact_Name">Contacto <p-sortIcon field="Contact_Name" /><p-columnFilter field="Contact_Name" type="text" display="row" matchMode="contains" [showMenu]="false" /></th><th pSortableColumn="Email">Correo <p-sortIcon field="Email" /><p-columnFilter field="Email" type="text" display="row" matchMode="contains" [showMenu]="false" /></th><th pSortableColumn="Phone">Teléfono <p-sortIcon field="Phone" /><p-columnFilter field="Phone" type="text" display="row" matchMode="contains" [showMenu]="false" /></th><th pSortableColumn="Is_Active">Estado <p-sortIcon field="Is_Active" /><p-columnFilter field="Is_Active" display="row" matchMode="equals" [showMenu]="false"><ng-template #filter let-value let-filter="filterCallback"><select aria-label="Filtrar estado de cliente" [ngModel]="value" (ngModelChange)="filter($event)"><option [ngValue]="null">Todos</option><option [ngValue]="true">Activo</option><option [ngValue]="false">Inactivo</option></select></ng-template></p-columnFilter></th><th class="actions-column">Acciones</th></tr></ng-template>
         <ng-template #body let-c><tr>
           <td class="main-cell">{{c['Name']}}</td><td>{{c['Contact_Name'] || 'Sin contacto'}}</td><td class="cell-wrap">{{c['Email'] || 'Sin correo'}}</td><td>{{c['Phone'] || 'Sin teléfono'}}</td>
           <td><span class="status-badge" [class.active]="c['Is_Active']">{{c['Is_Active'] ? 'Activo' : 'Inactivo'}}</span></td>

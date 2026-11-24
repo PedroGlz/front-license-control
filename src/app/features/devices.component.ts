@@ -15,27 +15,18 @@ import { MexicoDatePipe } from '../core/mexico-date.pipe';
     <div class="page-heading"><div><h1>Dispositivos</h1><p>Consulta los dispositivos vinculados a cuentas y licencias, junto con su estado de activación.</p></div></div>
 
     <section class="panel">
-      <div class="table-tools"><div class="table-filters">
-        <input pInputText aria-label="Buscar dispositivos" placeholder="Buscar por nombre" [(ngModel)]="search" (keyup.enter)="applyFilters()" />
-        <select aria-label="Filtrar por estado" [(ngModel)]="status" (ngModelChange)="applyFilters()">
-          <option value="">Todos los estados</option><option value="ACTIVE">Activos</option><option value="SUSPENDED">Suspendidos</option><option value="REVOKED">Revocados</option><option value="LOST">Perdidos</option><option value="REPLACED">Reemplazados</option>
-        </select>
-        <button pButton type="button" class="secondary" (click)="applyFilters()"><i class="pi pi-search"></i> Buscar</button>
-        <button pButton type="button" class="secondary" (click)="clearFilters()">Limpiar</button>
-      </div></div>
-
       <p-table [value]="rows()" styleClass="etic-table" [scrollable]="true">
         <ng-template #header><tr>
-          <th>Nombre<input pInputText aria-label="Filtrar nombre" [(ngModel)]="filters['Display_Name']" (keyup.enter)="applyFilters()" /></th>
-          <th>Propietario actual<input pInputText aria-label="Filtrar propietario" [(ngModel)]="filters['Owner']" (keyup.enter)="applyFilters()" /></th>
-          <th>Aplicación / licencia<input pInputText aria-label="Filtrar asociación" [(ngModel)]="filters['Association']" (keyup.enter)="applyFilters()" /></th>
-          <th>Fabricante<input pInputText aria-label="Filtrar fabricante" [(ngModel)]="filters['Manufacturer']" (keyup.enter)="applyFilters()" /></th>
-          <th>Modelo<input pInputText aria-label="Filtrar modelo" [(ngModel)]="filters['Model']" (keyup.enter)="applyFilters()" /></th>
-          <th>Android<input pInputText aria-label="Filtrar versión Android" [(ngModel)]="filters['Android_Version']" (keyup.enter)="applyFilters()" /></th>
-          <th>APK<input pInputText aria-label="Filtrar versión APK" [(ngModel)]="filters['App_Version']" (keyup.enter)="applyFilters()" /></th>
-          <th>Estado<select aria-label="Filtrar estado por columna" [(ngModel)]="status" (ngModelChange)="applyFilters()"><option value="">Todos</option><option value="ACTIVE">Activo</option><option value="SUSPENDED">Suspendido</option><option value="REVOKED">Revocado</option><option value="LOST">Perdido</option><option value="REPLACED">Reemplazado</option></select></th>
-          <th>Activación<input type="date" aria-label="Filtrar fecha de activación" [(ngModel)]="filters['Activated_At']" (ngModelChange)="applyFilters()" /></th>
-          <th>Última validación<input type="date" aria-label="Filtrar última validación" [(ngModel)]="filters['Last_Validation_At']" (ngModelChange)="applyFilters()" /></th>
+          <th><button type="button" class="column-sort" (click)="sortBy('Display_Name')">Nombre</button><input pInputText aria-label="Filtrar nombre" [(ngModel)]="filters['Display_Name']" (keyup.enter)="applyFilters()" /></th>
+          <th><button type="button" class="column-sort" (click)="sortBy('Owner')">Propietario actual</button><input pInputText aria-label="Filtrar propietario" [(ngModel)]="filters['Owner']" (keyup.enter)="applyFilters()" /></th>
+          <th><button type="button" class="column-sort" (click)="sortBy('Association')">Aplicación / licencia</button><input pInputText aria-label="Filtrar asociación" [(ngModel)]="filters['Association']" (keyup.enter)="applyFilters()" /></th>
+          <th><button type="button" class="column-sort" (click)="sortBy('Manufacturer')">Fabricante</button><input pInputText aria-label="Filtrar fabricante" [(ngModel)]="filters['Manufacturer']" (keyup.enter)="applyFilters()" /></th>
+          <th><button type="button" class="column-sort" (click)="sortBy('Model')">Modelo</button><input pInputText aria-label="Filtrar modelo" [(ngModel)]="filters['Model']" (keyup.enter)="applyFilters()" /></th>
+          <th><button type="button" class="column-sort" (click)="sortBy('Android_Version')">Android</button><input pInputText aria-label="Filtrar versión Android" [(ngModel)]="filters['Android_Version']" (keyup.enter)="applyFilters()" /></th>
+          <th><button type="button" class="column-sort" (click)="sortBy('App_Version')">APK</button><input pInputText aria-label="Filtrar versión APK" [(ngModel)]="filters['App_Version']" (keyup.enter)="applyFilters()" /></th>
+          <th><button type="button" class="column-sort" (click)="sortBy('Status')">Estado</button><select aria-label="Filtrar estado por columna" [(ngModel)]="status" (ngModelChange)="applyFilters()"><option value="">Todos</option><option value="ACTIVE">Activo</option><option value="SUSPENDED">Suspendido</option><option value="REVOKED">Revocado</option><option value="LOST">Perdido</option><option value="REPLACED">Reemplazado</option></select></th>
+          <th><button type="button" class="column-sort" (click)="sortBy('Activated_At')">Activación</button><input type="date" aria-label="Filtrar fecha de activación" [(ngModel)]="filters['Activated_At']" (ngModelChange)="applyFilters()" /></th>
+          <th><button type="button" class="column-sort" (click)="sortBy('Last_Validation_At')">Última validación</button><input type="date" aria-label="Filtrar última validación" [(ngModel)]="filters['Last_Validation_At']" (ngModelChange)="applyFilters()" /></th>
           <th class="actions-column">Acciones</th></tr></ng-template>
         <ng-template #body let-d><tr>
           <td class="main-cell">{{d['Display_Name'] || 'Dispositivo sin nombre'}}</td><td>{{d['Current_Owners'] || 'Sin propietario'}}</td><td>{{d['Current_Associations'] || 'Sin asociación vigente'}}</td><td>{{d['Manufacturer'] || '—'}}</td><td>{{d['Model'] || '—'}}</td><td>{{d['Android_Version'] || '—'}}</td><td>{{d['App_Version'] || '—'}}</td>
@@ -93,9 +84,12 @@ export class DevicesComponent {
   search = '';
   status = '';
   filters: Record<string, string> = {Display_Name: '', Owner: '', Association: '', Manufacturer: '', Model: '', Android_Version: '', App_Version: '', Activated_At: '', Last_Validation_At: ''};
+  order = 'Activated_At';
+  direction = 'desc';
 
   constructor() { this.load(); }
-  load() { this.api.list('devices', this.search, this.page(), 25, {Status: this.status, ...this.filters, sort: 'Activated_At', direction: 'desc'}).subscribe({next: r => this.rows.set(r), error: e => void this.alerts.error('No fue posible consultar dispositivos', this.alerts.message(e))}); }
+  load() { this.api.list('devices', this.search, this.page(), 25, {Status: this.status, ...this.filters, sort: this.order, direction: this.direction}).subscribe({next: r => this.rows.set(r), error: e => void this.alerts.error('No fue posible consultar dispositivos', this.alerts.message(e))}); }
+  sortBy(key: string) { this.direction = this.order === key && this.direction === 'asc' ? 'desc' : 'asc'; this.order = key; this.page.set(0); this.load(); }
   applyFilters() { this.page.set(0); this.load(); }
   clearFilters() { this.search = ''; this.status = ''; Object.keys(this.filters).forEach(key => this.filters[key] = ''); this.applyFilters(); }
   previous() { this.page.update(value => value - 1); this.load(); }

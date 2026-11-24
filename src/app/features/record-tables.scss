@@ -1,7 +1,15 @@
 :host { display: block; min-width: 0; }
-.page-heading p { margin: .35rem 0 0; }
+.page-heading p { margin: .35rem 0 1rem; }
 .table-filters { width: min(100%, 36rem); }
 .table-filters select { min-width: 10rem; }
+.etic-table th { vertical-align: top; }
+.etic-table th .p-column-filter { display: block; margin-top: .35rem; }
+.etic-table th input,
+.etic-table th select,
+.etic-table th .p-inputtext { width: 100%; min-width: 6.5rem; min-height: 2rem; height: 2rem; padding: .25rem .5rem; font-size: .78rem; }
+.column-sort { display: inline-flex; align-items: center; gap: .35rem; min-height: 1.75rem; padding: 0; border: 0; background: transparent; color: var(--text); font-weight: 700; cursor: pointer; }
+.column-sort .pi { color: var(--text-secondary); font-size: .75rem; }
+.table-context-filter { margin-bottom: .75rem; max-width: 22rem; }
 .main-cell { font-weight: 650; }
 .secondary-cell { color: var(--text-secondary); font-size: .82rem; }
 .cell-wrap { max-width: 18rem; overflow-wrap: anywhere; }

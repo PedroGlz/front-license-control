@@ -110,7 +110,7 @@ for (const [resource, config] of Object.entries(CONFIG)) {
   styleUrls: ['./forms.scss', './attribute-options.component.scss'],
   template: `
     <div class="page-heading tw:flex tw:flex-wrap tw:items-end tw:justify-between tw:gap-4"><h1>{{ cfg.title }}</h1><button pButton (click)="open()">Nuevo</button></div>
-    <div class="panel"><div class="table-tools"><div class="table-filters"><input pInputText
+    <div class="panel">@if (resource === 'permissions') {<div class="table-tools"><div class="table-filters"><input pInputText
           placeholder="Buscar"
           [(ngModel)]="search"
           (keyup.enter)="page.set(0); load()"
@@ -118,12 +118,12 @@ for (const [resource, config] of Object.entries(CONFIG)) {
         @if (hasSystem()) {
           <p-select [(ngModel)]="filterSystem" (ngModelChange)="page.set(0); load()" [options]="[{id: '', label: 'Todos los sistemas'}].concat(lookups['systems'] || [])" optionLabel="label" optionValue="id" ariaLabel="Sistema" />
         }
-        <button pButton type="button" class="secondary" (click)="clearFilters()">Limpiar</button></div></div>
+        <button pButton type="button" class="secondary" (click)="clearFilters()">Limpiar</button></div></div>}
       <p-table [value]="view()" styleClass="etic-table" [scrollable]="true">
         <ng-template #header>
           <tr>
             @for (f of tableFields(); track f.key) {
-              <th><button type="button" class="column-sort" (click)="sort(f.key)">{{ f.label }}</button>
+              <th><button type="button" class="column-sort" (click)="sort(f.key)">{{ f.label }} <i class="pi" [class.pi-sort-alt]="order !== f.key" [class.pi-sort-amount-up-alt]="order === f.key && direction === 'asc'" [class.pi-sort-amount-down]="order === f.key && direction === 'desc'" aria-hidden="true"></i></button>
                 @if (f.key === 'Id_System') {
                   <select [attr.aria-label]="'Filtrar ' + f.label" [(ngModel)]="filterSystem" (ngModelChange)="applyColumnFilters()"><option value="">Todos</option>@for(option of lookups['systems'] || []; track option.id){<option [value]="option.id">{{option.label}}</option>}</select>
                 } @else if (f.key === 'Status') {

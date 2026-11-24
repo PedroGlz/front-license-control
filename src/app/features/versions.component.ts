@@ -19,11 +19,7 @@ import { AlertService } from '../core/alert.service';
       >
         Subir APK
       </button></div>
-    <div class="panel"><div class="table-tools"><div class="table-filters"><p-select [(ngModel)]="application" (ngModelChange)="page = 0; load()" [options]="[{id: '', label: 'Seleccione sistema'}].concat(applications())" optionLabel="label" optionValue="id" ariaLabel="Sistema" /><input pInputText
-        placeholder="Buscar versión o archivo"
-        [(ngModel)]="search"
-        (keyup.enter)="page = 0; load()"
-      /><button pButton type="button" class="secondary" (click)="clearFilters()">Limpiar</button></div></div>
+    <div class="panel"><div class="table-context-filter"><p-select [(ngModel)]="application" (ngModelChange)="page = 0; load()" [options]="[{id: '', label: 'Seleccione sistema'}].concat(applications())" optionLabel="label" optionValue="id" ariaLabel="Sistema" /></div>
       <p-table [value]="rows()" styleClass="etic-table" [scrollable]="true">
         <ng-template #header>
           <tr>
