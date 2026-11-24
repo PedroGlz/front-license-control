@@ -107,18 +107,10 @@ for (const [resource, config] of Object.entries(CONFIG)) {
 @Component({
   standalone: true,
   imports: [SelectModule, TableModule, DialogModule, ButtonModule, InputTextModule, IconComponent, FormsModule, AttributeOptionsComponent],
-  styleUrls: ['./forms.scss', './attribute-options.component.scss'],
+  styleUrls: ['./forms.scss', './attribute-options.component.scss', './domain-admin.component.scss'],
   template: `
     <div class="page-heading tw:flex tw:flex-wrap tw:items-end tw:justify-between tw:gap-4"><h1>{{ cfg.title }}</h1><button pButton (click)="open()">Nuevo</button></div>
-    <div class="panel">@if (resource === 'permissions') {<div class="table-tools"><div class="table-filters"><input pInputText
-          placeholder="Buscar"
-          [(ngModel)]="search"
-          (keyup.enter)="page.set(0); load()"
-        />@if (!administrative()) {<p-select [(ngModel)]="filterStatus" (ngModelChange)="page.set(0); load()" [options]="[''].concat(statusOptions())" ariaLabel="Estatus"><ng-template #item let-status>{{ status || 'Todos los estatus' }}</ng-template><ng-template #selectedItem let-status>{{ status || 'Todos los estatus' }}</ng-template></p-select>}
-        @if (hasSystem()) {
-          <p-select [(ngModel)]="filterSystem" (ngModelChange)="page.set(0); load()" [options]="[{id: '', label: 'Todos los sistemas'}].concat(lookups['systems'] || [])" optionLabel="label" optionValue="id" ariaLabel="Sistema" />
-        }
-        <button pButton type="button" class="secondary" (click)="clearFilters()">Limpiar</button></div></div>}
+    <div class="panel">
       <p-table [value]="view()" styleClass="etic-table" [scrollable]="true">
         <ng-template #header>
           <tr>

@@ -12,7 +12,7 @@ import { AlertService } from '../core/alert.service';
 @Component({
   standalone: true,
   imports: [SelectModule, TableModule, DialogModule, ButtonModule, InputTextModule, TextareaModule, IconComponent, FormsModule],
-  styleUrls: ['./forms.scss'],
+  styleUrls: ['./forms.scss', './versions.component.scss'],
   template: `
     <div class="page-heading tw:flex tw:flex-wrap tw:items-end tw:justify-between tw:gap-4"><h1>Versiones APK</h1><button pButton
         (click)="open()"
@@ -24,11 +24,11 @@ import { AlertService } from '../core/alert.service';
         <ng-template #header>
           <tr>
             <th><button type="button" class="column-sort" (click)="sortBy('Version_Name')">Versión</button><input pInputText aria-label="Filtrar versión" [(ngModel)]="filters['Version_Name']" (keyup.enter)="applyFilters()" /></th>
-            <th>Archivo<input pInputText aria-label="Filtrar archivo" [(ngModel)]="filters['Original_File_Name']" (keyup.enter)="applyFilters()" /></th>
-            <th>Tamaño<div class="range-filter"><input pInputText type="number" min="0" placeholder="Mín." aria-label="Tamaño mínimo" [(ngModel)]="filters['File_Size_Min']" (keyup.enter)="applyFilters()" /><input pInputText type="number" min="0" placeholder="Máx." aria-label="Tamaño máximo" [(ngModel)]="filters['File_Size_Max']" (keyup.enter)="applyFilters()" /></div></th>
-            <th>SHA256<input pInputText aria-label="Filtrar SHA256" [(ngModel)]="filters['Sha256']" (keyup.enter)="applyFilters()" /></th>
+            <th><button type="button" class="column-sort" (click)="sortBy('Original_File_Name')">Archivo</button><input pInputText aria-label="Filtrar archivo" [(ngModel)]="filters['Original_File_Name']" (keyup.enter)="applyFilters()" /></th>
+            <th><button type="button" class="column-sort" (click)="sortBy('File_Size')">Tamaño</button><div class="range-filter"><input pInputText type="number" min="0" placeholder="Mín." aria-label="Tamaño mínimo" [(ngModel)]="filters['File_Size_Min']" (keyup.enter)="applyFilters()" /><input pInputText type="number" min="0" placeholder="Máx." aria-label="Tamaño máximo" [(ngModel)]="filters['File_Size_Max']" (keyup.enter)="applyFilters()" /></div></th>
+            <th><button type="button" class="column-sort" (click)="sortBy('Sha256')">SHA256</button><input pInputText aria-label="Filtrar SHA256" [(ngModel)]="filters['Sha256']" (keyup.enter)="applyFilters()" /></th>
             <th><button type="button" class="column-sort" (click)="sortBy('Created_At')">Fecha</button><input type="date" aria-label="Filtrar fecha" [(ngModel)]="filters['Created_At']" (ngModelChange)="applyFilters()" /></th>
-            <th>Estatus<select aria-label="Filtrar publicación" [(ngModel)]="filters['Published']" (ngModelChange)="applyFilters()"><option value="">Todos</option><option value="1">Publicada</option><option value="0">No publicada</option></select></th>
+            <th><button type="button" class="column-sort" (click)="sortBy('Published')">Estatus</button><select aria-label="Filtrar publicación" [(ngModel)]="filters['Published']" (ngModelChange)="applyFilters()"><option value="">Todos</option><option value="1">Publicada</option><option value="0">No publicada</option></select></th>
             <th>Acciones</th>
           </tr>
         </ng-template>

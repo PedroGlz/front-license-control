@@ -1,10 +1,6 @@
 @if (!model()) {
 <div class="page-heading tw:flex tw:flex-wrap tw:items-end tw:justify-between tw:gap-4"><h1>Usuarios</h1><button pButton (click)="edit()">Nuevo usuario</button></div>
-    <div class="panel"><div class="table-tools"><div class="table-filters"><input pInputText
-          placeholder="Usuario, nombre o email"
-          [(ngModel)]="search"
-          (keyup.enter)="page.set(0); load()"
-        /><button pButton type="button" class="secondary" (click)="clearFilters()">Limpiar</button></div></div>
+    <div class="panel">
       <p-table [value]="users()" styleClass="etic-table" [scrollable]="true">
         <ng-template #header>
           <tr>
@@ -12,7 +8,7 @@
             <th><button type="button" class="column-sort" (click)="sortBy('First_Name')">Nombre</button><input pInputText aria-label="Filtrar nombre" [(ngModel)]="columnFilters['Name']" (keyup.enter)="applyColumnFilters()" /></th>
             <th><button type="button" class="column-sort" (click)="sortBy('Email')">Email</button><input pInputText aria-label="Filtrar correo" [(ngModel)]="columnFilters['Email']" (keyup.enter)="applyColumnFilters()" /></th>
             <th><button type="button" class="column-sort" (click)="sortBy('Telefono')">Teléfono</button><input pInputText aria-label="Filtrar teléfono" [(ngModel)]="columnFilters['Telefono']" (keyup.enter)="applyColumnFilters()" /></th>
-            <th>Tipo<p-select [(ngModel)]="filterType" (ngModelChange)="applyColumnFilters()" [options]="[{id: '', label: 'Todos'}].concat(types)" optionValue="id" optionLabel="label" ariaLabel="Filtrar tipo de usuario" /></th>
+            <th><button type="button" class="column-sort" (click)="sortBy('Id_User_Type')">Tipo <i class="pi" [class.pi-sort-alt]="order !== 'Id_User_Type'" [class.pi-sort-amount-up-alt]="order === 'Id_User_Type' && direction === 'asc'" [class.pi-sort-amount-down]="order === 'Id_User_Type' && direction === 'desc'" aria-hidden="true"></i></button><p-select [(ngModel)]="filterType" (ngModelChange)="applyColumnFilters()" [options]="[{id: '', label: 'Todos'}].concat(types)" optionValue="id" optionLabel="label" ariaLabel="Filtrar tipo de usuario" /></th>
             <th></th>
           </tr>
         </ng-template>

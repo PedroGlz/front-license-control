@@ -71,7 +71,7 @@ import { MexicoDatePipe } from '../core/mexico-date.pipe';
       }
     </p-dialog>
   `,
-  styleUrls: ['./forms.scss', './record-tables.scss'],
+  styleUrls: ['./forms.scss', './record-tables.scss', './devices.component.scss'],
   styles: [`.pager{display:flex;justify-content:center;align-items:center;gap:.75rem;margin-top:1rem}`]
 })
 export class DevicesComponent {

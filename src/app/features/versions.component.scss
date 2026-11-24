@@ -1,0 +1,12 @@
+:host { display: block; }
+.page-heading { gap: 1rem; margin-bottom: 1.5rem; }
+.table-context-filter { max-width: 22rem; margin-bottom: .75rem; }
+.etic-table th { vertical-align: top; }
+.etic-table th > input,
+.etic-table th > select,
+.range-filter { display: block; width: 100%; min-width: 7rem; margin-top: .4rem; }
+.etic-table th > input,
+.etic-table th > select,
+.range-filter input { height: 2.1rem; padding: .25rem .5rem; font-size: .78rem; }
+.range-filter { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem; }
+.column-sort { display: inline-flex; align-items: center; gap: .35rem; padding: 0; border: 0; background: transparent; color: var(--text); font-weight: 700; cursor: pointer; }

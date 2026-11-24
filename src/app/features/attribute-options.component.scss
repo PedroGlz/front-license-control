@@ -1,4 +1,8 @@
 :host { display: block; min-width: 0; }
+:host ::ng-deep .etic-table th { vertical-align: top; }
+:host ::ng-deep .etic-table .p-column-filter { display: block; margin-top: .4rem; }
+:host ::ng-deep .etic-table .p-column-filter .p-inputtext,
+:host ::ng-deep .etic-table .p-column-filter select { width: 100%; min-width: 7rem; height: 2.1rem; padding: .25rem .5rem; font-size: .78rem; }
 .attribute-section { border: 1px solid var(--border); border-radius: var(--p-content-border-radius); padding: 1.5rem; margin-top: 1.5rem; background: var(--surface); }
 .form-section { grid-column: 1 / -1; border: 1px solid var(--border); border-radius: var(--p-content-border-radius); padding: 1.5rem; background: var(--surface); }
 .form-section + .form-section { margin-top: .5rem; }

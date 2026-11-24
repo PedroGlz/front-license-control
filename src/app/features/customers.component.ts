@@ -52,7 +52,7 @@ import { IconComponent } from '../core/icon.component';
       }
     </p-dialog>
   `,
-  styleUrls: ['./forms.scss', './record-tables.scss']
+  styleUrls: ['./forms.scss', './record-tables.scss', './customers.component.scss']
 })
 export class CustomersComponent {
   private api = inject(ApiService);
